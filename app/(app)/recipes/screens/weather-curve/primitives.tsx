@@ -15,32 +15,46 @@ const WIDE = 0.62;
 const MED = 0.55;
 const NARROW = 0.33;
 
-function charW(ch: string): number {
-	if ("MW@#%&".includes(ch)) return 0.82;
-	if (/[A-Z]/.test(ch)) return WIDE;
-	if ("m w".includes(ch)) return 0.82;
-	if (/[a-z]/.test(ch)) return MED;
-	if (/\d/.test(ch)) return 0.57;
-	if ("iltfj.,'()°".includes(ch)) return NARROW;
+function getCharWidth(char: string): number {
+	if ("MW@#%&".includes(char)) return 0.82;
+	if (/[A-Z]/.test(char)) return WIDE;
+	if ("m w".includes(char)) return 0.82;
+	if (/[a-z]/.test(char)) return MED;
+	if (/\d/.test(char)) return 0.57;
+	if ("iltfj.,'()°".includes(char)) return NARROW;
 	return 0.45; // spaces, punctuation, fallback
 }
 
-/** Approximate advance width of `s` rendered at `size` px in Inter. */
-export function estW(s: string, size: number, weight = 400): number {
-	let w = 0;
-	for (const ch of s) w += charW(ch);
-	return w * size * (weight >= 600 ? 1.02 : 1);
+/** Approximate advance width of `text` rendered at `size` px in Inter. */
+export function estimateTextWidth(
+	text: string,
+	size: number,
+	weight = 400,
+): number {
+	let totalWidth = 0;
+	for (const char of text) totalWidth += getCharWidth(char);
+	return totalWidth * size * (weight >= 600 ? 1.02 : 1);
 }
 
-export function trimToFit(s: string, maxW: number, size: number, weight = 400) {
-	if (estW(s, size, weight) <= maxW) return s;
-	while (s.length > 1 && estW(`${s}…`, size, weight) > maxW) {
-		s = s.slice(0, -1);
+export function trimToFit(
+	text: string,
+	maxWidth: number,
+	size: number,
+	weight = 400,
+) {
+	if (estimateTextWidth(text, size, weight) <= maxWidth) return text;
+	let trimmed = text;
+	while (
+		trimmed.length > 1 &&
+		estimateTextWidth(`${trimmed}…`, size, weight) > maxWidth
+	) {
+		trimmed = trimmed.slice(0, -1);
 	}
-	return `${s.replace(/\s+$/, "")}…`;
+	return `${trimmed.replace(/\s+$/, "")}…`;
 }
 
-export const deg = (t: number | null) => (t == null ? "–" : `${t}°`);
+export const formatDegrees = (temp: number | null) =>
+	temp == null ? "–" : `${temp}°`;
 
 // Neither takumi nor satori draws SVG <text> (takumi drops it, satori throws),
 // and CSS transforms aren't reliable either — so text renders as absolutely
@@ -48,12 +62,12 @@ export const deg = (t: number | null) => (t == null ? "–" : `${t}°`);
 // viewBox coords. y stays a baseline: top = y − 0.775·size (Inter's ascent).
 const ASCENT = 0.775;
 
-export interface TextOpts {
+export interface TextOptions {
 	size: number;
 	weight?: number;
 	fill?: string;
 	anchor?: "start" | "middle" | "end";
-	ls?: number;
+	letterSpacing?: number;
 }
 
 /**
@@ -61,58 +75,72 @@ export interface TextOpts {
  * Eliminates mutable module globals across concurrent renders.
  */
 export function createPrimitives(
-	cw: number,
-	ch: number,
-	vw: number,
-	vh: number,
+	canvasWidth: number,
+	canvasHeight: number,
+	viewWidth: number,
+	viewHeight: number,
 ) {
-	let key = 0;
-	const k = () => `e${key++}`;
-	const scale = Math.min(cw / vw, ch / vh);
-	const offX = (cw - vw * scale) / 2;
-	const offY = (ch - vh * scale) / 2;
+	let keyCounter = 0;
+	const nextKey = () => `e${keyCounter++}`;
+	const scale = Math.min(canvasWidth / viewWidth, canvasHeight / viewHeight);
+	const offsetX = (canvasWidth - viewWidth * scale) / 2;
+	const offsetY = (canvasHeight - viewHeight * scale) / 2;
 
 	function rect(
 		x: number,
 		y: number,
-		w: number,
-		h: number,
-		extra: Record<string, string | number> = {},
+		width: number,
+		height: number,
+		extraProps: Record<string, string | number> = {},
 	): ReactElement {
 		return (
-			<rect key={k()} x={x} y={y} width={w} height={h} fill={INK} {...extra} />
+			<rect
+				key={nextKey()}
+				x={x}
+				y={y}
+				width={width}
+				height={height}
+				fill={INK}
+				{...extraProps}
+			/>
 		);
 	}
 
-	function txt(x: number, y: number, s: string, o: TextOpts): ReactElement {
-		const size = o.size * scale;
-		const w = estW(s, o.size, o.weight || 400) * scale;
+	function txt(
+		x: number,
+		y: number,
+		content: string,
+		options: TextOptions,
+	): ReactElement {
+		const scaledFontSize = options.size * scale;
+		const scaledTextWidth =
+			estimateTextWidth(content, options.size, options.weight || 400) * scale;
 		let anchorOffset = 0;
-		if (o.anchor === "end") {
-			anchorOffset = w;
-		} else if (o.anchor === "middle") {
-			anchorOffset = w / 2;
+		if (options.anchor === "end") {
+			anchorOffset = scaledTextWidth;
+		} else if (options.anchor === "middle") {
+			anchorOffset = scaledTextWidth / 2;
 		}
-		const left = offX + x * scale - anchorOffset;
+		const left = offsetX + x * scale - anchorOffset;
 		return (
 			<div
-				key={k()}
+				key={nextKey()}
 				// PreSatori maps font-* classes to the registered font tables; a bare
 				// style.fontFamily is overridden by its blockkie default.
 				className="font-inter"
 				style={{
 					position: "absolute",
 					left,
-					top: offY + (y - ASCENT * o.size) * scale,
-					fontSize: size,
-					fontWeight: o.weight || 400,
-					color: o.fill || INK,
+					top: offsetY + (y - ASCENT * options.size) * scale,
+					fontSize: scaledFontSize,
+					fontWeight: options.weight || 400,
+					color: options.fill || INK,
 					// letterSpacing omitted: takumi's parser rejects negative values.
 					lineHeight: 1,
 					whiteSpace: "pre",
 				}}
 			>
-				{s}
+				{content}
 			</div>
 		);
 	}
@@ -123,36 +151,50 @@ export function createPrimitives(
 		y: number,
 		size: number,
 		maxRight: number,
-		now: number | null,
+		currentTemp: number | null,
 	) {
-		const s = deg(now);
-		const w = estW(s, size, 500) - 0.04 * size * s.length;
-		if (x + w <= maxRight) {
-			return txt(x, y, s, { size, weight: 500, ls: -0.04 * size });
+		const tempText = formatDegrees(currentTemp);
+		const estimatedWidth =
+			estimateTextWidth(tempText, size, 500) - 0.04 * size * tempText.length;
+		if (x + estimatedWidth <= maxRight) {
+			return txt(x, y, tempText, {
+				size,
+				weight: 500,
+				letterSpacing: -0.04 * size,
+			});
 		}
-		const scaled = (size * (maxRight - x)) / w;
-		return txt(x, y, s, { size: scaled, weight: 500, ls: -0.04 * scaled });
+		const scaledSize = (size * (maxRight - x)) / estimatedWidth;
+		return txt(x, y, tempText, {
+			size: scaledSize,
+			weight: 500,
+			letterSpacing: -0.04 * scaledSize,
+		});
 	}
 
-	return { k, rect, txt, bigTemp };
+	return { nextKey, rect, txt, bigTemp };
 }
 
 export interface Primitives {
-	k: () => string;
+	nextKey: () => string;
 	rect: (
 		x: number,
 		y: number,
-		w: number,
-		h: number,
-		extra?: Record<string, string | number>,
+		width: number,
+		height: number,
+		extraProps?: Record<string, string | number>,
 	) => ReactElement;
-	txt: (x: number, y: number, s: string, o: TextOpts) => ReactElement;
+	txt: (
+		x: number,
+		y: number,
+		content: string,
+		options: TextOptions,
+	) => ReactElement;
 	bigTemp: (
 		x: number,
 		y: number,
 		size: number,
 		maxRight: number,
-		now: number | null,
+		currentTemp: number | null,
 	) => ReactElement;
 }
 export type View = Model & Primitives;

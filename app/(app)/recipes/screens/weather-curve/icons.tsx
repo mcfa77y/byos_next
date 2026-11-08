@@ -73,173 +73,219 @@ const ICONS: Record<string, IconSpec> = {
 };
 
 function upperIntersection(
-	a: { x: number; y: number; r: number },
-	b: { x: number; y: number; r: number },
+	circleA: { x: number; y: number; r: number },
+	circleB: { x: number; y: number; r: number },
 ) {
-	const dx = b.x - a.x;
-	const dy = b.y - a.y;
-	const d = Math.hypot(dx, dy);
-	const l = (a.r * a.r - b.r * b.r + d * d) / (2 * d);
-	const h = Math.sqrt(Math.max(a.r * a.r - l * l, 0));
-	const mx = a.x + (l * dx) / d;
-	const my = a.y + (l * dy) / d;
-	const p = { x: mx + (h * dy) / d, y: my - (h * dx) / d };
-	const q = { x: mx - (h * dy) / d, y: my + (h * dx) / d };
-	return p.y < q.y ? p : q;
+	const dx = circleB.x - circleA.x;
+	const dy = circleB.y - circleA.y;
+	const distance = Math.hypot(dx, dy);
+	const chordOffset =
+		(circleA.r * circleA.r - circleB.r * circleB.r + distance * distance) /
+		(2 * distance);
+	const perpHeight = Math.sqrt(
+		Math.max(circleA.r * circleA.r - chordOffset * chordOffset, 0),
+	);
+	const midX = circleA.x + (chordOffset * dx) / distance;
+	const midY = circleA.y + (chordOffset * dy) / distance;
+	const point1 = {
+		x: midX + (perpHeight * dy) / distance,
+		y: midY - (perpHeight * dx) / distance,
+	};
+	const point2 = {
+		x: midX - (perpHeight * dy) / distance,
+		y: midY + (perpHeight * dx) / distance,
+	};
+	return point1.y < point2.y ? point1 : point2;
 }
 
 function arcTo(
-	c: { x: number; y: number; r: number },
+	circle: { x: number; y: number; r: number },
 	from: { x: number; y: number },
 	to: { x: number; y: number },
 ) {
 	let span =
-		Math.atan2(to.y - c.y, to.x - c.x) - Math.atan2(from.y - c.y, from.x - c.x);
+		Math.atan2(to.y - circle.y, to.x - circle.x) -
+		Math.atan2(from.y - circle.y, from.x - circle.x);
 	while (span < 0) span += 2 * Math.PI;
-	return `A${c.r} ${c.r} 0 ${span > Math.PI ? 1 : 0} 1 ${to.x} ${to.y}`;
+	return `A${circle.r} ${circle.r} 0 ${span > Math.PI ? 1 : 0} 1 ${to.x} ${to.y}`;
 }
 
-function cloudPath(p: number[]): string {
-	const L = { x: p[1], y: p[0] - p[2], r: p[2] };
-	const T = { x: p[3], y: p[4], r: p[5] };
-	const R = { x: p[6], y: p[0] - p[7], r: p[7] };
-	const start = { x: L.x, y: p[0] };
-	const lt = upperIntersection(L, T);
-	const tr = upperIntersection(T, R);
-	const end = { x: R.x, y: p[0] };
-	return `M${start.x} ${start.y}${arcTo(L, start, lt)}${arcTo(T, lt, tr)}${arcTo(R, tr, end)}Z`;
-}
-
-function moonPath(m: number[]): string {
-	const o = { x: m[0], y: m[1], r: m[2] };
-	const i = {
-		x: m[0] + m[2] * 0.55,
-		y: m[1] - m[2] * 0.45,
-		r: m[2] * 0.8,
+function cloudPath(cloudParams: number[]): string {
+	const leftCircle = {
+		x: cloudParams[1],
+		y: cloudParams[0] - cloudParams[2],
+		r: cloudParams[2],
 	};
-	const dx = i.x - o.x;
-	const dy = i.y - o.y;
-	const d = Math.hypot(dx, dy);
-	const l = (o.r * o.r - i.r * i.r + d * d) / (2 * d);
-	const h = Math.sqrt(o.r * o.r - l * l);
-	const mx = o.x + (l * dx) / d;
-	const my = o.y + (l * dy) / d;
-	const p = { x: mx + (h * dy) / d, y: my - (h * dx) / d };
-	const q = { x: mx - (h * dy) / d, y: my + (h * dx) / d };
-	return `M${p.x} ${p.y}A${o.r} ${o.r} 0 1 0 ${q.x} ${q.y}A${i.r} ${i.r} 0 0 1 ${p.x} ${p.y}Z`;
+	const topCircle = {
+		x: cloudParams[3],
+		y: cloudParams[4],
+		r: cloudParams[5],
+	};
+	const rightCircle = {
+		x: cloudParams[6],
+		y: cloudParams[0] - cloudParams[7],
+		r: cloudParams[7],
+	};
+	const start = { x: leftCircle.x, y: cloudParams[0] };
+	const leftTopJoin = upperIntersection(leftCircle, topCircle);
+	const topRightJoin = upperIntersection(topCircle, rightCircle);
+	const end = { x: rightCircle.x, y: cloudParams[0] };
+	return `M${start.x} ${start.y}${arcTo(leftCircle, start, leftTopJoin)}${arcTo(topCircle, leftTopJoin, topRightJoin)}${arcTo(rightCircle, topRightJoin, end)}Z`;
+}
+
+function moonPath(moonParams: number[]): string {
+	const outerCircle = {
+		x: moonParams[0],
+		y: moonParams[1],
+		r: moonParams[2],
+	};
+	const innerCircle = {
+		x: moonParams[0] + moonParams[2] * 0.55,
+		y: moonParams[1] - moonParams[2] * 0.45,
+		r: moonParams[2] * 0.8,
+	};
+	const dx = innerCircle.x - outerCircle.x;
+	const dy = innerCircle.y - outerCircle.y;
+	const distance = Math.hypot(dx, dy);
+	const chordOffset =
+		(outerCircle.r * outerCircle.r -
+			innerCircle.r * innerCircle.r +
+			distance * distance) /
+		(2 * distance);
+	const perpHeight = Math.sqrt(
+		Math.max(outerCircle.r * outerCircle.r - chordOffset * chordOffset, 0),
+	);
+	const midX = outerCircle.x + (chordOffset * dx) / distance;
+	const midY = outerCircle.y + (chordOffset * dy) / distance;
+	const point1 = {
+		x: midX + (perpHeight * dy) / distance,
+		y: midY - (perpHeight * dx) / distance,
+	};
+	const point2 = {
+		x: midX - (perpHeight * dy) / distance,
+		y: midY + (perpHeight * dx) / distance,
+	};
+	return `M${point1.x} ${point1.y}A${outerCircle.r} ${outerCircle.r} 0 1 0 ${point2.x} ${point2.y}A${innerCircle.r} ${innerCircle.r} 0 0 1 ${point1.x} ${point1.y}Z`;
 }
 
 export function icon(
 	name: string,
-	cx: number,
-	cy: number,
-	kf: number,
-	sw: number,
+	centerX: number,
+	centerY: number,
+	scaleFactor: number,
+	strokeWidth: number,
 ) {
 	const spec = ICONS[name] || ICONS.cloudy;
 	const children: ReactNode[] = [];
 	const add = (
 		tag: "line" | "path" | "circle",
-		a: Record<string, string | number>,
+		attributes: Record<string, string | number>,
 	) => {
 		const idx = children.length;
 		if (tag === "line") {
-			children.push(<line key={idx} {...a} />);
+			children.push(<line key={idx} {...attributes} />);
 		} else if (tag === "path") {
-			children.push(<path key={idx} {...a} />);
+			children.push(<path key={idx} {...attributes} />);
 		} else {
-			children.push(<circle key={idx} {...a} />);
+			children.push(<circle key={idx} {...attributes} />);
 		}
 	};
 
 	if (spec.sun) {
-		const s = spec.sun;
+		const sun = spec.sun;
 		add("circle", {
-			cx: s[0],
-			cy: s[1],
-			r: s[2],
+			cx: sun[0],
+			cy: sun[1],
+			r: sun[2],
 			vectorEffect: "non-scaling-stroke",
 		});
 		for (let i = 0; i < 8; i++) {
-			const a = (i * Math.PI) / 4;
-			const c = Math.cos(a);
-			const sn = Math.sin(a);
+			const angle = (i * Math.PI) / 4;
+			const cos = Math.cos(angle);
+			const sin = Math.sin(angle);
 			add("line", {
-				x1: s[0] + c * s[3],
-				y1: s[1] + sn * s[3],
-				x2: s[0] + c * s[4],
-				y2: s[1] + sn * s[4],
+				x1: sun[0] + cos * sun[3],
+				y1: sun[1] + sin * sun[3],
+				x2: sun[0] + cos * sun[4],
+				y2: sun[1] + sin * sun[4],
 				vectorEffect: "non-scaling-stroke",
 			});
 		}
 	}
 	if (spec.moon)
-		add("path", { d: moonPath(spec.moon), vectorEffect: "non-scaling-stroke" });
+		add("path", {
+			d: moonPath(spec.moon),
+			vectorEffect: "non-scaling-stroke",
+		});
 	if (spec.cloud) {
-		const d = cloudPath(spec.cloud);
+		const pathData = cloudPath(spec.cloud);
 		if (spec.sun || spec.moon) {
 			add("path", {
-				d,
+				d: pathData,
 				fill: PAPER,
 				stroke: PAPER,
-				strokeWidth: sw + 0.6,
+				strokeWidth: strokeWidth + 0.6,
 				vectorEffect: "non-scaling-stroke",
 			});
 		}
-		add("path", { d, fill: PAPER, vectorEffect: "non-scaling-stroke" });
-	}
-	if (spec.drops) {
-		const r = spec.drops;
-		for (let j = -1; j <= 1; j++) {
-			const x = r[0] + j * r[1];
-			add("line", {
-				x1: x + r[4] / 2,
-				y1: r[2],
-				x2: x - r[4] / 2,
-				y2: r[3],
-				vectorEffect: "non-scaling-stroke",
-			});
-		}
-	}
-	for (const l of spec.lines || []) {
-		add("line", {
-			x1: l[0],
-			y1: l[1],
-			x2: l[2],
-			y2: l[3],
+		add("path", {
+			d: pathData,
+			fill: PAPER,
 			vectorEffect: "non-scaling-stroke",
 		});
 	}
-	for (const p of spec.paths || []) {
-		add("path", { d: p, vectorEffect: "non-scaling-stroke" });
+	if (spec.drops) {
+		const drops = spec.drops;
+		for (let j = -1; j <= 1; j++) {
+			const x = drops[0] + j * drops[1];
+			add("line", {
+				x1: x + drops[4] / 2,
+				y1: drops[2],
+				x2: x - drops[4] / 2,
+				y2: drops[3],
+				vectorEffect: "non-scaling-stroke",
+			});
+		}
 	}
-	for (const p of spec.dots || []) {
+	for (const lineCoords of spec.lines || []) {
+		add("line", {
+			x1: lineCoords[0],
+			y1: lineCoords[1],
+			x2: lineCoords[2],
+			y2: lineCoords[3],
+			vectorEffect: "non-scaling-stroke",
+		});
+	}
+	for (const pathData of spec.paths || []) {
+		add("path", { d: pathData, vectorEffect: "non-scaling-stroke" });
+	}
+	for (const point of spec.dots || []) {
 		children.push(
 			<circle
 				key={children.length}
-				cx={p[0]}
-				cy={p[1]}
+				cx={point[0]}
+				cy={point[1]}
 				r={1.3}
 				fill={INK}
 				stroke="none"
 			/>,
 		);
 	}
-	for (const p of spec.rings || []) {
+	for (const ring of spec.rings || []) {
 		add("circle", {
-			cx: p[0],
-			cy: p[1],
+			cx: ring[0],
+			cy: ring[1],
 			r: 1.4,
 			vectorEffect: "non-scaling-stroke",
 		});
 	}
 	return (
 		<g
-			key={`icon-${cx}-${cy}`}
-			transform={`translate(${cx} ${cy}) scale(${kf})`}
+			key={`icon-${centerX}-${centerY}`}
+			transform={`translate(${centerX} ${centerY}) scale(${scaleFactor})`}
 			fill="none"
 			stroke={INK}
-			strokeWidth={sw}
+			strokeWidth={strokeWidth}
 			strokeLinecap="round"
 			strokeLinejoin="round"
 		>
@@ -249,24 +295,29 @@ export function icon(
 }
 
 /** Rain drop: filled from 50% chance of rain, outlined below. */
-export function drop(cx: number, cy: number, h: number, filled: boolean) {
-	const w = h * 0.735;
-	const top = cy - h / 2;
-	const rb = w / 2;
-	const cb = cy + h / 2 - rb;
-	const d =
-		`M${cx} ${top}C${cx + w * 0.12} ${top + h * 0.22} ${cx + rb} ${cb - rb * 0.9} ` +
-		`${cx + rb} ${cb}A${rb} ${rb} 0 0 1 ${cx - rb} ${cb}` +
-		`C${cx - rb} ${cb - rb * 0.9} ${cx - w * 0.12} ${top + h * 0.22} ${cx} ${top}Z`;
+export function drop(
+	centerX: number,
+	centerY: number,
+	height: number,
+	filled: boolean,
+) {
+	const width = height * 0.735;
+	const topY = centerY - height / 2;
+	const bottomRadius = width / 2;
+	const bottomCenterY = centerY + height / 2 - bottomRadius;
+	const pathData =
+		`M${centerX} ${topY}C${centerX + width * 0.12} ${topY + height * 0.22} ${centerX + bottomRadius} ${bottomCenterY - bottomRadius * 0.9} ` +
+		`${centerX + bottomRadius} ${bottomCenterY}A${bottomRadius} ${bottomRadius} 0 0 1 ${centerX - bottomRadius} ${bottomCenterY}` +
+		`C${centerX - bottomRadius} ${bottomCenterY - bottomRadius * 0.9} ${centerX - width * 0.12} ${topY + height * 0.22} ${centerX} ${topY}Z`;
 	return filled ? (
-		<path key={`drop-${cx}-${cy}`} d={d} fill={INK} />
+		<path key={`drop-${centerX}-${centerY}`} d={pathData} fill={INK} />
 	) : (
 		<path
-			key={`drop-${cx}-${cy}`}
-			d={d}
+			key={`drop-${centerX}-${centerY}`}
+			d={pathData}
 			fill="none"
 			stroke={INK}
-			strokeWidth={h * 0.11}
+			strokeWidth={height * 0.11}
 		/>
 	);
 }

@@ -209,17 +209,17 @@ const I18N = {
 	},
 } as const satisfies Record<"de" | "en", I18nShape>;
 
-const isDe = (t: I18n) => t.days[0] === "Mo";
+const isGerman = (i18n: I18n) => i18n.days[0] === "Mo";
 
-function dateLong(t: I18n, d: Day) {
-	return isDe(t)
-		? `${t.daysLong[d.weekday]}, ${d.day}. ${t.months[d.month - 1]}`
-		: `${t.daysLong[d.weekday]}, ${t.months[d.month - 1]} ${d.day}`;
+function formatDateLong(i18n: I18n, day: Day) {
+	return isGerman(i18n)
+		? `${i18n.daysLong[day.weekday]}, ${day.day}. ${i18n.months[day.month - 1]}`
+		: `${i18n.daysLong[day.weekday]}, ${i18n.months[day.month - 1]} ${day.day}`;
 }
-function dateShort(t: I18n, d: Day) {
-	return isDe(t)
-		? `${t.days[d.weekday]}, ${d.day}. ${t.monthsShort[d.month - 1]}`
-		: `${t.days[d.weekday]}, ${t.monthsShort[d.month - 1]} ${d.day}`;
+function formatDateShort(i18n: I18n, day: Day) {
+	return isGerman(i18n)
+		? `${i18n.days[day.weekday]}, ${day.day}. ${i18n.monthsShort[day.month - 1]}`
+		: `${i18n.days[day.weekday]}, ${i18n.monthsShort[day.month - 1]} ${day.day}`;
 }
 
 // ---- view model -----------------------------------------------------------
@@ -234,7 +234,7 @@ export interface ModelDay {
 }
 
 export interface Model {
-	t: I18n;
+	i18n: I18n;
 	days: ModelDay[];
 	now: { temp: number | null; icon: string; text: string };
 	station: string;
@@ -242,54 +242,57 @@ export interface Model {
 	dateLong: string;
 	dateShort: string;
 	updated: string;
-	uvOn: boolean;
+	showUv: boolean;
 	hasRain: boolean;
 }
 
-export const hasRain = (d: ModelDay) => d.rain != null;
+export const hasRain = (day: ModelDay) => day.rain != null;
 
 export function buildModel(data: Data, params: Params): Model {
-	const t = params.language === "de" ? I18N.de : I18N.en;
-	const u = params.units?.trim().toLowerCase();
-	const fahrenheit =
-		u !== "celsius" && u !== "celcius" && u !== "c" && u !== "metric";
-	const temp = (c: number | null) => {
-		if (c == null) return null;
-		return Math.round(fahrenheit ? (c * 9) / 5 + 32 : c);
+	const i18n = params.language === "de" ? I18N.de : I18N.en;
+	const normalizedUnits = params.units?.trim().toLowerCase();
+	const useFahrenheit =
+		normalizedUnits !== "celsius" &&
+		normalizedUnits !== "celcius" &&
+		normalizedUnits !== "c" &&
+		normalizedUnits !== "metric";
+	const convertTemp = (celsius: number | null) => {
+		if (celsius == null) return null;
+		return Math.round(useFahrenheit ? (celsius * 9) / 5 + 32 : celsius);
 	};
-	const hm = data.updated.slice(11, 16);
-	const h = Number.parseInt(hm, 10);
-	let clock = "";
-	if (hm) {
-		if (fahrenheit) {
-			const period = h < 12 ? " AM" : " PM";
-			clock = `${h % 12 || 12}${hm.slice(2)}${period}`;
+	const timeHoursMinutes = data.updated.slice(11, 16);
+	const hour24 = Number.parseInt(timeHoursMinutes, 10);
+	let formattedClock = "";
+	if (timeHoursMinutes) {
+		if (useFahrenheit) {
+			const period = hour24 < 12 ? " AM" : " PM";
+			formattedClock = `${hour24 % 12 || 12}${timeHoursMinutes.slice(2)}${period}`;
 		} else {
-			clock = hm;
+			formattedClock = timeHoursMinutes;
 		}
 	}
-	const first = data.days[0];
+	const firstDay = data.days[0];
 	return {
-		t,
-		days: data.days.map((d) => ({
-			label: t.days[d.weekday],
-			high: temp(d.high),
-			low: temp(d.low),
-			rain: d.rain,
-			icon: d.icon,
-			uv: d.uv,
+		i18n,
+		days: data.days.map((day) => ({
+			label: i18n.days[day.weekday],
+			high: convertTemp(day.high),
+			low: convertTemp(day.low),
+			rain: day.rain,
+			icon: day.icon,
+			uv: day.uv,
 		})),
 		now: {
-			temp: temp(data.now.temp),
+			temp: convertTemp(data.now.temp),
 			icon: data.now.icon,
-			text: t.cond[data.now.icon] || "",
+			text: i18n.cond[data.now.icon] || "",
 		},
 		station: data.station || (data.source === "open-meteo" ? "Open-Meteo" : ""),
 		credit: data.source === "open-meteo" && data.station ? "Open-Meteo" : "",
-		dateLong: first ? dateLong(t, first) : "",
-		dateShort: first ? dateShort(t, first) : "",
-		updated: clock ? `${t.updated} ${clock}` : "",
-		uvOn: params.showUv,
-		hasRain: data.days.some((d) => d.rain != null),
+		dateLong: firstDay ? formatDateLong(i18n, firstDay) : "",
+		dateShort: firstDay ? formatDateShort(i18n, firstDay) : "",
+		updated: formattedClock ? `${i18n.updated} ${formattedClock}` : "",
+		showUv: params.showUv,
+		hasRain: data.days.some((day) => day.rain != null),
 	};
 }

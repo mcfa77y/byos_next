@@ -2,8 +2,8 @@ import type { ReactElement } from "react";
 import { drop, icon } from "./icons";
 import { hasRain, type ModelDay } from "./model";
 import {
-	deg,
-	estW,
+	estimateTextWidth,
+	formatDegrees,
 	GRAY,
 	INK,
 	PAPER,
@@ -11,175 +11,219 @@ import {
 	type View,
 } from "./primitives";
 
-const sign = (v: number) => (v < 0 ? -1 : 1);
+const sign = (value: number) => (value < 0 ? -1 : 1);
 
-const edge = (a: number[], b: number[], tb: number) => {
-	const h = b[0] - a[0];
-	return h ? (3 * (b[1] - a[1])) / h / 2 - tb / 2 : tb;
+const edgeSlope = (
+	pointA: number[],
+	pointB: number[],
+	neighborTangent: number,
+) => {
+	const deltaX = pointB[0] - pointA[0];
+	return deltaX
+		? (3 * (pointB[1] - pointA[1])) / deltaX / 2 - neighborTangent / 2
+		: neighborTangent;
 };
 
 // Monotone cubic interpolation (same as d3.curveMonotoneX): flat runs stay
 // flat, no overshoot. vertical: points are [y, x] and the curve runs down.
-export function monotone(pts: number[][], vertical = false): string {
-	const P = vertical
-		? (a: number, b: number) => `${b} ${a}`
-		: (a: number, b: number) => `${a} ${b}`;
-	const n = pts.length;
-	const t = new Array<number>(n).fill(0);
-	for (let i = 1; i < n - 1; i++) {
-		const h0 = pts[i][0] - pts[i - 1][0];
-		const h1 = pts[i + 1][0] - pts[i][0];
-		const s0 = (pts[i][1] - pts[i - 1][1]) / h0;
-		const s1 = (pts[i + 1][1] - pts[i][1]) / h1;
-		const p = (s0 * h1 + s1 * h0) / (h0 + h1);
-		t[i] =
-			(sign(s0) + sign(s1)) *
-				Math.min(Math.abs(s0), Math.abs(s1), 0.5 * Math.abs(p)) || 0;
+export function monotone(points: number[][], vertical = false): string {
+	const formatPoint = vertical
+		? (x: number, y: number) => `${y} ${x}`
+		: (x: number, y: number) => `${x} ${y}`;
+	const pointCount = points.length;
+	const tangents = new Array<number>(pointCount).fill(0);
+	for (let i = 1; i < pointCount - 1; i++) {
+		const deltaX0 = points[i][0] - points[i - 1][0];
+		const deltaX1 = points[i + 1][0] - points[i][0];
+		const slope0 = (points[i][1] - points[i - 1][1]) / deltaX0;
+		const slope1 = (points[i + 1][1] - points[i][1]) / deltaX1;
+		const weightedSlope =
+			(slope0 * deltaX1 + slope1 * deltaX0) / (deltaX0 + deltaX1);
+		tangents[i] =
+			(sign(slope0) + sign(slope1)) *
+				Math.min(
+					Math.abs(slope0),
+					Math.abs(slope1),
+					0.5 * Math.abs(weightedSlope),
+				) || 0;
 	}
-	t[0] = edge(pts[0], pts[1], t[1] || 0);
-	t[n - 1] = edge(pts[n - 2], pts[n - 1], t[n - 2] || 0);
-	let d = `M${P(pts[0][0], pts[0][1])}`;
-	for (let i = 0; i < n - 1; i++) {
-		const dx = (pts[i + 1][0] - pts[i][0]) / 3;
-		d += `C${P(pts[i][0] + dx, pts[i][1] + dx * t[i])} ${P(pts[i + 1][0] - dx, pts[i + 1][1] - dx * t[i + 1])} ${P(pts[i + 1][0], pts[i + 1][1])}`;
+	tangents[0] = edgeSlope(points[0], points[1], tangents[1] || 0);
+	tangents[pointCount - 1] = edgeSlope(
+		points[pointCount - 2],
+		points[pointCount - 1],
+		tangents[pointCount - 2] || 0,
+	);
+	let pathData = `M${formatPoint(points[0][0], points[0][1])}`;
+	for (let i = 0; i < pointCount - 1; i++) {
+		const deltaXThird = (points[i + 1][0] - points[i][0]) / 3;
+		pathData += `C${formatPoint(points[i][0] + deltaXThird, points[i][1] + deltaXThird * tangents[i])} ${formatPoint(points[i + 1][0] - deltaXThird, points[i + 1][1] - deltaXThird * tangents[i + 1])} ${formatPoint(points[i + 1][0], points[i + 1][1])}`;
 	}
-	return d;
+	return pathData;
 }
 
 export interface ChartGeom {
-	x0: number;
-	x1: number;
+	startX: number;
+	endX: number;
 	gridTop: number;
-	base: number;
-	rainTop: number;
-	yMax: number;
-	yMin: number;
+	baseY: number;
+	rainTopY: number;
+	maxTempY: number;
+	minTempY: number;
 	maxScale?: number;
-	legend?: boolean;
-	iconY?: number;
-	hiW: number;
-	loW: number;
-	hiR: number;
-	hiRW: number;
-	loR: number;
-	hiOff: number;
-	loOff: number;
-	hiSize: number;
-	loSize: number;
-	iconK: number;
-	iconSW: number;
-	dayY: number;
-	daySize: number;
-	pillW: number;
-	pillH: number;
+	showLegend?: boolean;
+	iconCenterY?: number;
+	highStrokeWidth: number;
+	lowStrokeWidth: number;
+	highRadius: number;
+	highRadiusStrokeWidth: number;
+	lowRadius: number;
+	highLabelOffset: number;
+	lowLabelOffset: number;
+	highFontSize: number;
+	lowFontSize: number;
+	iconScale: number;
+	iconStrokeWidth: number;
+	dayLabelY: number;
+	dayFontSize: number;
+	pillWidth: number;
+	pillHeight: number;
 	pillY: number;
 }
 
-/** uvXs: the columns used instead of xs when today's UV index is shown. */
+/** uvColumnXs: the columns used instead of columnXs when today's UV index is shown. */
 export function stats(
-	xs: number[],
+	columnXs: number[],
 	labelY: number,
 	valueY: number,
-	size: number,
+	fontSize: number,
 	day: ModelDay,
-	uvXs: number[] | undefined,
-	V: View,
+	uvColumnXs: number[] | undefined,
+	view: View,
 ): ReactElement[] {
-	const { txt } = V;
-	const uv = V.uvOn && uvXs && day.uv != null;
+	const { txt } = view;
+	const showUv = view.showUv && uvColumnXs && day.uv != null;
 	const items: [string, string][] = [
-		[V.t.high, deg(day.high)],
-		[V.t.low, deg(day.low)],
+		[view.i18n.high, formatDegrees(day.high)],
+		[view.i18n.low, formatDegrees(day.low)],
 	];
-	if (hasRain(day)) items.push([V.t.rain, `${day.rain}%`]);
-	if (uv) items.push(["UV", String(day.uv)]);
-	const at = uv ? uvXs : xs;
-	return items.flatMap((s, i) => [
-		txt(at[i], labelY, s[0], { size: 11, weight: 600, ls: 1 }),
-		txt(at[i], valueY, s[1], { size, weight: 600 }),
+	if (hasRain(day)) items.push([view.i18n.rain, `${day.rain}%`]);
+	if (showUv) items.push(["UV", String(day.uv)]);
+	const positions = showUv ? uvColumnXs : columnXs;
+	return items.flatMap((statItem, index) => [
+		txt(positions[index], labelY, statItem[0], {
+			size: 11,
+			weight: 600,
+			letterSpacing: 1,
+		}),
+		txt(positions[index], valueY, statItem[1], {
+			size: fontSize,
+			weight: 600,
+		}),
 	]);
 }
 
 export function footer(
-	x0: number,
-	x1: number,
+	startX: number,
+	endX: number,
 	ruleY: number,
-	y: number,
-	size: number,
-	V: View,
+	textY: number,
+	fontSize: number,
+	view: View,
 ): ReactElement[] {
-	const { rect, txt } = V;
+	const { rect, txt } = view;
 	return [
-		rect(x0, ruleY, x1 - x0, 1),
-		txt(x0, y, V.t.title + (V.credit ? ` · ${V.credit}` : ""), {
-			size,
+		rect(startX, ruleY, endX - startX, 1),
+		txt(
+			startX,
+			textY,
+			view.i18n.title + (view.credit ? ` · ${view.credit}` : ""),
+			{
+				size: fontSize,
+				weight: 500,
+			},
+		),
+		txt(endX, textY, view.updated, {
+			size: fontSize,
 			weight: 500,
+			anchor: "end",
 		}),
-		txt(x1, y, V.updated, { size, weight: 500, anchor: "end" }),
 	];
 }
 
 /** 7-day chart: highs, lows, chance of rain, one icon per day. */
 export function chart(
 	days: ModelDay[],
-	g: ChartGeom,
-	V: View,
+	geom: ChartGeom,
+	view: View,
 	hasGray: boolean,
 ): ReactElement[] {
-	const { k, rect, txt } = V;
+	const { nextKey, rect, txt } = view;
 	const out: ReactElement[] = [];
-	const n = days.length;
-	const colW = (g.x1 - g.x0) / n;
-	const cx = (i: number) => g.x0 + colW * (i + 0.5);
-	const highs = days.map((d) => d.high ?? 0);
-	const lows = days.map((d) => d.low ?? 0);
-	const tmax = Math.max(...highs);
-	const tmin = Math.min(...lows);
-	let scale = (g.yMin - g.yMax) / (tmax - tmin || 1);
-	let top = g.yMax;
-	if (g.maxScale && scale > g.maxScale) {
-		top += (g.yMin - g.yMax - (tmax - tmin) * g.maxScale) / 2;
-		scale = g.maxScale;
+	const dayCount = days.length;
+	const columnWidth = (geom.endX - geom.startX) / dayCount;
+	const columnCenterX = (dayIndex: number) =>
+		geom.startX + columnWidth * (dayIndex + 0.5);
+	const highs = days.map((day) => day.high ?? 0);
+	const lows = days.map((day) => day.low ?? 0);
+	const maxTemp = Math.max(...highs);
+	const minTemp = Math.min(...lows);
+	let scale = (geom.minTempY - geom.maxTempY) / (maxTemp - minTemp || 1);
+	let topY = geom.maxTempY;
+	if (geom.maxScale && scale > geom.maxScale) {
+		topY +=
+			(geom.minTempY - geom.maxTempY - (maxTemp - minTemp) * geom.maxScale) / 2;
+		scale = geom.maxScale;
 	}
-	const ty = (t: number) => top + (tmax - t) * scale;
-	const ry = (p: number) => g.base - (p / 100) * (g.base - g.rainTop);
-	const withEnds = (ys: number[]) => {
-		const pts = ys.map((y, i) => [cx(i), y]);
-		return [[g.x0, ys[0]], ...pts, [g.x1, ys[n - 1]]];
+	const tempToY = (temp: number) => topY + (maxTemp - temp) * scale;
+	const rainToY = (probability: number) =>
+		geom.baseY - (probability / 100) * (geom.baseY - geom.rainTopY);
+	const withChartEnds = (yValues: number[]) => {
+		const points = yValues.map((y, index) => [columnCenterX(index), y]);
+		return [
+			[geom.startX, yValues[0]],
+			...points,
+			[geom.endX, yValues[dayCount - 1]],
+		];
 	};
 
-	for (let i = 1; i < n; i++) {
-		const gx = Math.floor(g.x0 + colW * i) + 0.5;
+	for (let index = 1; index < dayCount; index++) {
+		const gridX = Math.floor(geom.startX + columnWidth * index) + 0.5;
 		out.push(
 			<line
-				key={k()}
-				x1={gx}
-				y1={g.gridTop}
-				x2={gx}
-				y2={g.base}
+				key={nextKey()}
+				x1={gridX}
+				y1={geom.gridTop}
+				x2={gridX}
+				y2={geom.baseY}
 				stroke={hasGray ? GRAY : INK}
 				strokeWidth={1}
 			/>,
 		);
 	}
 
-	if (V.hasRain) {
+	if (view.hasRain) {
 		out.push(
 			<path
-				key={k()}
-				d={`${monotone(withEnds(days.map((d) => ry(d.rain || 0))))}L${g.x1} ${g.base}L${g.x0} ${g.base}Z`}
+				key={nextKey()}
+				d={`${monotone(withChartEnds(days.map((day) => rainToY(day.rain || 0))))}L${geom.endX} ${geom.baseY}L${geom.startX} ${geom.baseY}Z`}
 				fill={hasGray ? GRAY : "url(#wc-dots)"}
 			/>,
 		);
-		for (let x = g.x0; x < g.x1; x += 4) {
-			out.push(rect(x, g.rainTop, 1, 1));
+		for (let x = geom.startX; x < geom.endX; x += 4) {
+			out.push(rect(x, geom.rainTopY, 1, 1));
 		}
 	}
-	if (g.legend && V.hasRain) {
-		const lw = estW(V.t.legend, 11, 500) + 10;
+	if (geom.showLegend && view.hasRain) {
+		const legendWidth = estimateTextWidth(view.i18n.legend, 11, 500) + 10;
 		out.push(
-			rect(g.x1 - lw - 5, g.rainTop + 3, lw + 5, 16, { fill: PAPER }),
-			txt(g.x1 - 5, g.rainTop + 15, V.t.legend, {
+			rect(
+				geom.endX - legendWidth - 5,
+				geom.rainTopY + 3,
+				legendWidth + 5,
+				16,
+				{ fill: PAPER },
+			),
+			txt(geom.endX - 5, geom.rainTopY + 15, view.i18n.legend, {
 				size: 11,
 				weight: 500,
 				anchor: "end",
@@ -187,59 +231,78 @@ export function chart(
 		);
 	}
 	out.push(
-		rect(g.x0, g.base, g.x1 - g.x0, 1),
+		rect(geom.startX, geom.baseY, geom.endX - geom.startX, 1),
 		<path
-			key={k()}
-			d={monotone(withEnds(highs.map(ty)))}
+			key={nextKey()}
+			d={monotone(withChartEnds(highs.map(tempToY)))}
 			fill="none"
 			stroke={INK}
-			strokeWidth={g.hiW}
+			strokeWidth={geom.highStrokeWidth}
 		/>,
 		<path
-			key={k()}
-			d={monotone(withEnds(lows.map(ty)))}
+			key={nextKey()}
+			d={monotone(withChartEnds(lows.map(tempToY)))}
 			fill="none"
 			stroke={INK}
-			strokeWidth={g.loW}
+			strokeWidth={geom.lowStrokeWidth}
 		/>,
 	);
 
-	days.forEach((d, i) => {
-		const x = cx(i);
-		const yh = ty(d.high ?? 0);
-		const yl = ty(d.low ?? 0);
+	days.forEach((day, index) => {
+		const centerX = columnCenterX(index);
+		const highY = tempToY(day.high ?? 0);
+		const lowY = tempToY(day.low ?? 0);
 		out.push(
 			<circle
-				key={k()}
-				cx={x}
-				cy={yh}
-				r={g.hiR}
+				key={nextKey()}
+				cx={centerX}
+				cy={highY}
+				r={geom.highRadius}
 				fill={PAPER}
 				stroke={INK}
-				strokeWidth={g.hiRW}
+				strokeWidth={geom.highRadiusStrokeWidth}
 			/>,
-			<circle key={k()} cx={x} cy={yl} r={g.loR} fill={INK} />,
-			txt(x, yh + g.hiOff, deg(d.high), {
-				size: g.hiSize,
+			<circle
+				key={nextKey()}
+				cx={centerX}
+				cy={lowY}
+				r={geom.lowRadius}
+				fill={INK}
+			/>,
+			txt(centerX, highY + geom.highLabelOffset, formatDegrees(day.high), {
+				size: geom.highFontSize,
 				weight: 600,
 				anchor: "middle",
 			}),
-			txt(x, yl + g.loOff, deg(d.low), {
-				size: g.loSize,
+			txt(centerX, lowY + geom.lowLabelOffset, formatDegrees(day.low), {
+				size: geom.lowFontSize,
 				weight: 500,
 				anchor: "middle",
 			}),
-			icon(d.icon, x, g.iconY || (yh + yl) / 2, g.iconK, g.iconSW),
+			icon(
+				day.icon,
+				centerX,
+				geom.iconCenterY || (highY + lowY) / 2,
+				geom.iconScale,
+				geom.iconStrokeWidth,
+			),
 		);
-		if (i === 0) {
-			const pw = Math.max(
-				g.pillW,
-				estW(d.label, g.daySize, 600) + g.pillH * 0.6,
+		if (index === 0) {
+			const labelPillWidth = Math.max(
+				geom.pillWidth,
+				estimateTextWidth(day.label, geom.dayFontSize, 600) +
+					geom.pillHeight * 0.6,
 			);
 			out.push(
-				rect(x - pw / 2, g.pillY, pw, g.pillH, { rx: g.pillH / 2 }),
-				txt(x, g.dayY, d.label, {
-					size: g.daySize,
+				rect(
+					centerX - labelPillWidth / 2,
+					geom.pillY,
+					labelPillWidth,
+					geom.pillHeight,
+					{ rx: geom.pillHeight / 2 },
+				),
+				txt(centerX, geom.dayLabelY, day.label, {
+					size: geom.dayFontSize,
 					weight: 600,
 					anchor: "middle",
 					fill: PAPER,
@@ -247,8 +310,8 @@ export function chart(
 			);
 		} else {
 			out.push(
-				txt(x, g.dayY, d.label, {
-					size: g.daySize,
+				txt(centerX, geom.dayLabelY, day.label, {
+					size: geom.dayFontSize,
 					weight: 600,
 					anchor: "middle",
 				}),
@@ -259,50 +322,79 @@ export function chart(
 }
 
 /** The next six days as rows (day, icon, rain, low–high bar); first baseline y0. */
-export function dayRows(y0: number, pitch: number, V: View): ReactElement[] {
-	const { rect, txt } = V;
-	const rows = V.days.slice(1, 7);
+export function dayRows(
+	firstBaselineY: number,
+	rowPitch: number,
+	view: View,
+): ReactElement[] {
+	const { rect, txt } = view;
+	const rows = view.days.slice(1, 7);
 	if (!rows.length) return [];
-	const lo = Math.min(...rows.map((d) => d.low ?? 0));
-	const hi = Math.max(...rows.map((d) => d.high ?? 0));
-	const bx = (v: number) => 204 + ((v - lo) * 132) / (hi - lo || 1);
+	const minLow = Math.min(...rows.map((day) => day.low ?? 0));
+	const maxHigh = Math.max(...rows.map((day) => day.high ?? 0));
+	const tempToBarX = (temp: number) =>
+		204 + ((temp - minLow) * 132) / (maxHigh - minLow || 1);
 	const out: ReactElement[] = [];
-	rows.forEach((d, i) => {
-		const b = y0 + pitch * i;
+	rows.forEach((day, index) => {
+		const baselineY = firstBaselineY + rowPitch * index;
 		out.push(
-			txt(24, b, d.label, { size: 15, weight: 600 }),
-			icon(d.icon, 77, b - 6, 0.86, 1.75),
+			txt(24, baselineY, day.label, { size: 15, weight: 600 }),
+			icon(day.icon, 77, baselineY - 6, 0.86, 1.75),
 		);
-		if (hasRain(d)) {
+		if (hasRain(day)) {
 			out.push(
-				drop(114.5, b - 5.5, 9.6, (d.rain ?? 0) >= 50),
-				txt(124, b, `${d.rain}%`, { size: 14, weight: 500 }),
+				drop(114.5, baselineY - 5.5, 9.6, (day.rain ?? 0) >= 50),
+				txt(124, baselineY, `${day.rain}%`, { size: 14, weight: 500 }),
 			);
 		}
-		out.push(txt(194, b, deg(d.low), { size: 15, weight: 500, anchor: "end" }));
-		for (let x = 204; x < 336; x += 4) out.push(rect(x, b - 7, 1, 2));
 		out.push(
-			rect(bx(d.low ?? 0), b - 10, bx(d.high ?? 0) - bx(d.low ?? 0) || 1, 8, {
-				rx: 4,
+			txt(194, baselineY, formatDegrees(day.low), {
+				size: 15,
+				weight: 500,
+				anchor: "end",
 			}),
-			txt(371.3, b, deg(d.high), { size: 15, weight: 600, anchor: "end" }),
+		);
+		for (let x = 204; x < 336; x += 4) out.push(rect(x, baselineY - 7, 1, 2));
+		out.push(
+			rect(
+				tempToBarX(day.low ?? 0),
+				baselineY - 10,
+				tempToBarX(day.high ?? 0) - tempToBarX(day.low ?? 0) || 1,
+				8,
+				{
+					rx: 4,
+				},
+			),
+			txt(371.3, baselineY, formatDegrees(day.high), {
+				size: 15,
+				weight: 600,
+				anchor: "end",
+			}),
 		);
 	});
 	return out;
 }
 
 /** Today block shared by the list/portrait/column designs (y 0–208). */
-export function todayBlock(V: View): ReactElement[] {
-	const { rect, txt, bigTemp } = V;
-	const dateW = estW(V.dateShort, 14);
-	const station = trimToFit(V.station, 352 - dateW - 16, 18, 600);
+export function todayBlock(view: View): ReactElement[] {
+	const { rect, txt, bigTemp } = view;
+	const dateWidth = estimateTextWidth(view.dateShort, 14);
+	const station = trimToFit(view.station, 352 - dateWidth - 16, 18, 600);
 	return [
-		txt(376, 40, V.dateShort, { size: 14, anchor: "end" }),
+		txt(376, 40, view.dateShort, { size: 14, anchor: "end" }),
 		txt(24, 40, station, { size: 18, weight: 600 }),
-		bigTemp(24, 134, 96, 318, V.now.temp),
-		icon(V.now.icon, 347, 87.85, 1.826, 2.8),
-		txt(376, 133, V.now.text, { size: 16, weight: 500, anchor: "end" }),
-		...stats([24, 144, 264], 166, 189, 20, V.days[0], [24, 144, 264, 332], V),
+		bigTemp(24, 134, 96, 318, view.now.temp),
+		icon(view.now.icon, 347, 87.85, 1.826, 2.8),
+		txt(376, 133, view.now.text, { size: 16, weight: 500, anchor: "end" }),
+		...stats(
+			[24, 144, 264],
+			166,
+			189,
+			20,
+			view.days[0],
+			[24, 144, 264, 332],
+			view,
+		),
 		rect(24, 208, 352, 1),
 	];
 }

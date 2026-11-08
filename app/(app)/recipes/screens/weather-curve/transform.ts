@@ -108,52 +108,56 @@ export function dayIcon(
 	hours: { icon: string; precipitation?: number | null }[],
 ): string {
 	const icons = hours
-		.map((h) => (h.icon || "").replace("-night", "-day"))
+		.map((hour) => (hour.icon || "").replace("-night", "-day"))
 		.filter(Boolean);
 	if (!icons.length) return "cloudy";
 
 	const counts: Record<string, number> = {};
-	for (const ic of icons) counts[ic] = (counts[ic] || 0) + 1;
+	for (const iconName of icons) {
+		counts[iconName] = (counts[iconName] || 0) + 1;
+	}
 
-	for (const s of SEVERE) {
-		if ((counts[s] || 0) >= 2) return s;
+	for (const severeIcon of SEVERE) {
+		if ((counts[severeIcon] || 0) >= 2) return severeIcon;
 	}
 	if ((counts.rain || 0) >= 4) return "rain";
 
-	let base = "cloudy";
+	let baseIcon = "cloudy";
 	let maxCount = -1;
-	for (const [k, v] of Object.entries(counts)) {
-		if (v > maxCount) {
-			maxCount = v;
-			base = k;
+	for (const [iconName, count] of Object.entries(counts)) {
+		if (count > maxCount) {
+			maxCount = count;
+			baseIcon = iconName;
 		}
 	}
 
-	const wet = hours.filter((h) => (h.precipitation || 0) >= 0.1).length;
-	if (wet >= 2) {
-		return base === "partly-cloudy-day" || base === "clear-day"
+	const wetHours = hours.filter(
+		(hour) => (hour.precipitation || 0) >= 0.1,
+	).length;
+	if (wetHours >= 2) {
+		return baseIcon === "partly-cloudy-day" || baseIcon === "clear-day"
 			? "partly-cloudy-rain"
 			: "rain";
 	}
-	return base;
+	return baseIcon;
 }
 
 function parseHourlyRows(input: OpenMeteoInput): HourlyRow[] {
-	const h = input?.hourly || {};
-	const times = h.time || [];
-	const temps = h.temperature_2m || [];
-	const probs = h.precipitation_probability || [];
-	const precips = h.precipitation || [];
-	const codes = h.weather_code || [];
-	const isDays = h.is_day || [];
+	const hourly = input?.hourly || {};
+	const times = hourly.time || [];
+	const temperatures = hourly.temperature_2m || [];
+	const probabilities = hourly.precipitation_probability || [];
+	const precipitations = hourly.precipitation || [];
+	const codes = hourly.weather_code || [];
+	const isDayFlags = hourly.is_day || [];
 
-	return times.map((ts, i) => ({
-		t: new Date(ts),
-		isoDate: ts.slice(0, 10),
-		temperature: temps[i] ?? null,
-		icon: wmoIcon(codes[i], (isDays[i] ?? 1) !== 0),
-		precipitation: precips[i] ?? null,
-		prob: probs[i] ?? null,
+	return times.map((timestamp, index) => ({
+		t: new Date(timestamp),
+		isoDate: timestamp.slice(0, 10),
+		temperature: temperatures[index] ?? null,
+		icon: wmoIcon(codes[index], (isDayFlags[index] ?? 1) !== 0),
+		precipitation: precipitations[index] ?? null,
+		prob: probabilities[index] ?? null,
 	}));
 }
 
@@ -170,9 +174,9 @@ export function parseCurrent(
 	zone: string,
 	firstRow?: HourlyRow,
 ) {
-	const cur = input?.current;
-	if (cur?.time) {
-		let timeStr = cur.time;
+	const current = input?.current;
+	if (current?.time) {
+		let timeStr = current.time;
 		if (timeStr.length === 16) {
 			timeStr = `${timeStr}:00`;
 		} else if (timeStr.length === 13) {
@@ -180,8 +184,8 @@ export function parseCurrent(
 		}
 		const hasZone = /(?:[+-]\d\d:?\d\d|Z)$/i.test(timeStr);
 		return {
-			temp: rnd1(cur.temperature_2m),
-			icon: wmoIcon(cur.weather_code, (cur.is_day ?? 1) !== 0),
+			temp: rnd1(current.temperature_2m),
+			icon: wmoIcon(current.weather_code, (current.is_day ?? 1) !== 0),
 			updated: hasZone ? timeStr : `${timeStr.slice(0, 19)}${zone}`,
 		};
 	}
@@ -196,32 +200,36 @@ export function parseCurrent(
 }
 
 function buildDay(
-	dStr: string,
-	ws: HourlyRow[],
-	uv?: number | null,
+	dateStr: string,
+	dayRows: HourlyRow[],
+	uvIndex?: number | null,
 ): WeatherDay {
-	const tValues = ws
-		.map((w) => w.temperature)
-		.filter((t): t is number => t != null);
-	const pValues = ws.map((w) => w.prob).filter((p): p is number => p != null);
-	const dayDate = new Date(`${dStr}T12:00:00Z`);
+	const temperatureValues = dayRows
+		.map((row) => row.temperature)
+		.filter((temp): temp is number => temp != null);
+	const probabilityValues = dayRows
+		.map((row) => row.prob)
+		.filter((prob): prob is number => prob != null);
+	const dayDate = new Date(`${dateStr}T12:00:00Z`);
 	const weekday = (dayDate.getUTCDay() + 6) % 7;
 
-	const dayHours = ws.filter((w) => {
-		const hour = Number.parseInt(w.t.toISOString().slice(11, 13), 10);
+	const daytimeHours = dayRows.filter((row) => {
+		const hour = Number.parseInt(row.t.toISOString().slice(11, 13), 10);
 		return DAY_HOURS.has(hour);
 	});
 
 	return {
-		date: dStr,
+		date: dateStr,
 		weekday,
-		day: Number.parseInt(dStr.slice(8, 10), 10),
-		month: Number.parseInt(dStr.slice(5, 7), 10),
-		high: tValues.length ? rnd1(Math.max(...tValues)) : null,
-		low: tValues.length ? rnd1(Math.min(...tValues)) : null,
-		rain: pValues.length ? Math.max(...pValues) : null,
-		icon: dayIcon(dayHours.length ? dayHours : ws),
-		uv: uv ?? null,
+		day: Number.parseInt(dateStr.slice(8, 10), 10),
+		month: Number.parseInt(dateStr.slice(5, 7), 10),
+		high: temperatureValues.length
+			? rnd1(Math.max(...temperatureValues))
+			: null,
+		low: temperatureValues.length ? rnd1(Math.min(...temperatureValues)) : null,
+		rain: probabilityValues.length ? Math.max(...probabilityValues) : null,
+		icon: dayIcon(daytimeHours.length ? daytimeHours : dayRows),
+		uv: uvIndex ?? null,
 	};
 }
 
@@ -229,10 +237,10 @@ function parseUvMap(daily?: OpenMeteoInput["daily"]): Record<string, number> {
 	const uvMap: Record<string, number> = {};
 	if (!daily?.time || !daily?.uv_index_max) return uvMap;
 
-	for (let i = 0; i < daily.time.length; i++) {
-		const u = daily.uv_index_max[i];
-		if (typeof u === "number") {
-			uvMap[daily.time[i].slice(0, 10)] = Math.round(u);
+	for (let index = 0; index < daily.time.length; index++) {
+		const uvValue = daily.uv_index_max[index];
+		if (typeof uvValue === "number") {
+			uvMap[daily.time[index].slice(0, 10)] = Math.round(uvValue);
 		}
 	}
 	return uvMap;
@@ -240,10 +248,10 @@ function parseUvMap(daily?: OpenMeteoInput["daily"]): Record<string, number> {
 
 function groupByDate(rows: HourlyRow[]): Map<string, HourlyRow[]> {
 	const byDate = new Map<string, HourlyRow[]>();
-	for (const r of rows) {
-		const list = byDate.get(r.isoDate) ?? [];
-		if (!byDate.has(r.isoDate)) byDate.set(r.isoDate, list);
-		list.push(r);
+	for (const row of rows) {
+		const list = byDate.get(row.isoDate) ?? [];
+		if (!byDate.has(row.isoDate)) byDate.set(row.isoDate, list);
+		list.push(row);
 	}
 	return byDate;
 }
@@ -256,17 +264,17 @@ export function transformOpenMeteo(input: OpenMeteoInput): WeatherCurveData {
 	const byDate = groupByDate(rows);
 
 	const fullDates = Array.from(byDate.keys())
-		.filter((d) => (byDate.get(d)?.length || 0) >= 12)
+		.filter((dateKey) => (byDate.get(dateKey)?.length || 0) >= 12)
 		.toSorted((a, b) => a.localeCompare(b));
 	const todayStr = input?.current?.time
 		? input.current.time.slice(0, 10)
 		: fullDates[0];
-	const ahead = fullDates.filter((d) => d >= todayStr);
+	const ahead = fullDates.filter((dateKey) => dateKey >= todayStr);
 	const dates = ahead.length >= DAYS ? ahead : fullDates;
 
 	const days: WeatherDay[] = [];
-	for (const dStr of dates) {
-		days.push(buildDay(dStr, byDate.get(dStr) || [], uvMap[dStr]));
+	for (const dateStr of dates) {
+		days.push(buildDay(dateStr, byDate.get(dateStr) || [], uvMap[dateStr]));
 		if (days.length === DAYS) break;
 	}
 
