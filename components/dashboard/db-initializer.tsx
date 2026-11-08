@@ -18,7 +18,7 @@ import {
 	type SqlExecutionStatus,
 } from "@/app/actions/execute-sql";
 import { SQL_STATEMENTS } from "@/lib/database/sql-statements";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 export function DbInitializer({
 	databaseConfigured,

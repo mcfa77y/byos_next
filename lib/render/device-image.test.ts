@@ -1,7 +1,6 @@
 import sharp from "sharp";
-import { getDeviceProfile } from "../trmnl/device-profile";
+import { getDeviceProfile } from "@/lib/trmnl/device-profile";
 import { renderDeviceImage } from "./device-image";
-
 describe("renderDeviceImage", () => {
 	it("renders a 1x1 black pixel PNG buffer", async () => {
 		const png = await sharp({
