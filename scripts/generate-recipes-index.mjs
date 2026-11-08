@@ -34,7 +34,7 @@ function listRecipeSlugs() {
 			// Skip directories without a matching component file.
 		}
 	}
-	slugs.sort();
+	slugs.sort((a, b) => a.localeCompare(b));
 	return slugs;
 }
 

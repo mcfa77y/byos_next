@@ -51,7 +51,7 @@ try {
 	const files = fs
 		.readdirSync(migrationsDir)
 		.filter((f) => f.endsWith(".sql"))
-		.sort();
+		.sort((a, b) => a.localeCompare(b));
 
 	if (files.length === 0) {
 		console.warn("⚠️  No migration files found in", migrationsDir);
@@ -76,7 +76,9 @@ try {
 	}
 
 	// Generate validation query - simple query that returns missing tables
-	const tableNamesArray = Array.from(allTableNames).sort();
+	const tableNamesArray = Array.from(allTableNames).sort((a, b) =>
+		a.localeCompare(b),
+	);
 	const validationQuery = `-- Check for missing required tables
 -- Returns empty result if all tables exist, or rows with missing table names if any are missing
 SELECT 
