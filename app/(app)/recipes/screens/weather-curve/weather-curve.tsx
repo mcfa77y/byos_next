@@ -55,26 +55,39 @@ export default function WeatherCurve({
 	const hasGray = profile.bitDepth > 1 || profile.colors > 2;
 	const view: View = {
 		...buildModel(data, params),
-		...createPrimitives(canvasWidth, canvasHeight, viewWidth, viewHeight),
+		...createPrimitives({
+			canvasWidth,
+			canvasHeight,
+			viewWidth,
+			viewHeight,
+		}),
 	};
 	const needsDots = !hasGray && view.hasRain;
 	const renderedItems: ReactNode[] = [];
 
 	if (view.days.length === 0) {
 		renderedItems.push(
-			view.txt(24, viewHeight / 2, view.station || "Weather Curve", {
+			view.txt({
+				x: 24,
+				y: viewHeight / 2,
+				content: view.station || "Weather Curve",
 				size: 20,
 				weight: 600,
 			}),
-			view.txt(24, viewHeight / 2 + 24, "Loading…", { size: 16 }),
+			view.txt({
+				x: 24,
+				y: viewHeight / 2 + 24,
+				content: "Loading…",
+				size: 16,
+			}),
 		);
 	} else {
 		const renderByDesign: Record<string, () => ReactElement[]> = {
-			full: () => designFull(viewHeight, view, hasGray),
-			portrait: () => designPortrait(viewHeight, view, hasGray),
+			full: () => designFull({ viewHeight, view, hasGray }),
+			portrait: () => designPortrait({ viewHeight, view, hasGray }),
 			column: () => designColumn(viewHeight, view),
 			list: () => designList(viewHeight, view),
-			wide: () => designWide(viewHeight, view, hasGray),
+			wide: () => designWide({ viewHeight, view, hasGray }),
 			quadrant: () => designQuadrant(viewHeight, view),
 		};
 		renderedItems.push(...renderByDesign[selectedDesign]());

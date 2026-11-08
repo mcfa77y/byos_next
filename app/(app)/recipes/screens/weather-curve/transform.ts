@@ -193,11 +193,13 @@ function formatZoneOffset(offsetSeconds: number): string {
 	return `${sign}${pad(hours)}:${pad(minutes)}`;
 }
 
-export function parseCurrent(
-	input: OpenMeteoInput,
-	zone: string,
-	firstRow?: HourlyRow,
-) {
+export interface ParseCurrentOptions {
+	input: OpenMeteoInput;
+	zone: string;
+	firstRow?: HourlyRow;
+}
+
+export function parseCurrent({ input, zone, firstRow }: ParseCurrentOptions) {
 	const current = input?.current;
 	if (current?.time) {
 		let timeStr = current.time;
@@ -225,11 +227,13 @@ export function parseCurrent(
 	return null;
 }
 
-function buildDay(
-	dateStr: string,
-	dayRows: HourlyRow[],
-	uvIndex?: number | null,
-): WeatherDay {
+export interface BuildDayOptions {
+	dateStr: string;
+	dayRows: HourlyRow[];
+	uvIndex?: number | null;
+}
+
+function buildDay({ dateStr, dayRows, uvIndex }: BuildDayOptions): WeatherDay {
 	const temperatureValues = dayRows
 		.map((row) => row.temperature)
 		.filter((temp): temp is number => temp != null);
@@ -285,7 +289,7 @@ function groupByDate(rows: HourlyRow[]): Map<string, HourlyRow[]> {
 export function transformOpenMeteo(input: OpenMeteoInput): WeatherCurveData {
 	const rows = parseHourlyRows(input);
 	const zone = formatZoneOffset(Number(input?.utc_offset_seconds || 0));
-	const now = parseCurrent(input, zone, rows[0]);
+	const now = parseCurrent({ input, zone, firstRow: rows[0] });
 	const uvMap = parseUvMap(input?.daily);
 	const byDate = groupByDate(rows);
 	const fullDates = Array.from(byDate.keys())
@@ -301,7 +305,13 @@ export function transformOpenMeteo(input: OpenMeteoInput): WeatherCurveData {
 
 	const days: WeatherDay[] = [];
 	for (const dateStr of dates) {
-		days.push(buildDay(dateStr, byDate.get(dateStr) || [], uvMap[dateStr]));
+		days.push(
+			buildDay({
+				dateStr,
+				dayRows: byDate.get(dateStr) || [],
+				uvIndex: uvMap[dateStr],
+			}),
+		);
 		if (days.length === FORECAST_DAYS_TARGET) break;
 	}
 

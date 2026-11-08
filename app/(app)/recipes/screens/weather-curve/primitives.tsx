@@ -31,12 +31,18 @@ function getCharWidth(char: string): number {
 	if ("iltfj.,'()°".includes(char)) return CHAR_WIDTH_NARROW;
 	return CHAR_WIDTH_FALLBACK; // spaces, punctuation, fallback
 }
+export interface EstimateTextWidthOptions {
+	text: string;
+	size: number;
+	weight?: number;
+}
+
 /** Approximate advance width of `text` rendered at `size` px in Inter. */
-export function estimateTextWidth(
-	text: string,
-	size: number,
+export function estimateTextWidth({
+	text,
+	size,
 	weight = DEFAULT_FONT_WEIGHT,
-): number {
+}: EstimateTextWidthOptions): number {
 	let totalWidth = 0;
 	for (const char of text) totalWidth += getCharWidth(char);
 	return (
@@ -46,17 +52,24 @@ export function estimateTextWidth(
 	);
 }
 
-export function trimToFit(
-	text: string,
-	maxWidth: number,
-	size: number,
+export interface TrimToFitOptions {
+	text: string;
+	maxWidth: number;
+	size: number;
+	weight?: number;
+}
+
+export function trimToFit({
+	text,
+	maxWidth,
+	size,
 	weight = DEFAULT_FONT_WEIGHT,
-) {
-	if (estimateTextWidth(text, size, weight) <= maxWidth) return text;
+}: TrimToFitOptions) {
+	if (estimateTextWidth({ text, size, weight }) <= maxWidth) return text;
 	let trimmed = text;
 	while (
 		trimmed.length > 1 &&
-		estimateTextWidth(`${trimmed}…`, size, weight) > maxWidth
+		estimateTextWidth({ text: `${trimmed}…`, size, weight }) > maxWidth
 	) {
 		trimmed = trimmed.slice(0, -1);
 	}
@@ -81,29 +94,58 @@ export interface TextOptions {
 	letterSpacing?: number;
 }
 
+export interface CreatePrimitivesOptions {
+	canvasWidth: number;
+	canvasHeight: number;
+	viewWidth: number;
+	viewHeight: number;
+}
+
+export interface RectOptions {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	extraProps?: Record<string, string | number>;
+}
+
+export interface TextRenderOptions extends TextOptions {
+	x: number;
+	y: number;
+	content: string;
+}
+
+export interface BigTempOptions {
+	x: number;
+	y: number;
+	size: number;
+	maxRight: number;
+	currentTemp: number | null;
+}
+
 /**
  * Per-render coordinate transform and element factory (xMidYMid meet).
  * Eliminates mutable module globals across concurrent renders.
  */
-export function createPrimitives(
-	canvasWidth: number,
-	canvasHeight: number,
-	viewWidth: number,
-	viewHeight: number,
-) {
+export function createPrimitives({
+	canvasWidth,
+	canvasHeight,
+	viewWidth,
+	viewHeight,
+}: CreatePrimitivesOptions) {
 	let keyCounter = 0;
 	const nextKey = () => `e${keyCounter++}`;
 	const scale = Math.min(canvasWidth / viewWidth, canvasHeight / viewHeight);
 	const offsetX = (canvasWidth - viewWidth * scale) / 2;
 	const offsetY = (canvasHeight - viewHeight * scale) / 2;
 
-	function rect(
-		x: number,
-		y: number,
-		width: number,
-		height: number,
-		extraProps: Record<string, string | number> = {},
-	): ReactElement {
+	function rect({
+		x,
+		y,
+		width,
+		height,
+		extraProps = {},
+	}: RectOptions): ReactElement {
 		return (
 			<rect
 				key={nextKey()}
@@ -117,23 +159,27 @@ export function createPrimitives(
 		);
 	}
 
-	function txt(
-		x: number,
-		y: number,
-		content: string,
-		options: TextOptions,
-	): ReactElement {
-		const scaledFontSize = options.size * scale;
+	function txt({
+		x,
+		y,
+		content,
+		size,
+		weight = DEFAULT_FONT_WEIGHT,
+		fill = INK,
+		anchor,
+		letterSpacing: _letterSpacing,
+	}: TextRenderOptions): ReactElement {
+		const scaledFontSize = size * scale;
 		const scaledTextWidth =
-			estimateTextWidth(
-				content,
-				options.size,
-				options.weight || DEFAULT_FONT_WEIGHT,
-			) * scale;
+			estimateTextWidth({
+				text: content,
+				size,
+				weight,
+			}) * scale;
 		let anchorOffset = 0;
-		if (options.anchor === "end") {
+		if (anchor === "end") {
 			anchorOffset = scaledTextWidth;
-		} else if (options.anchor === "middle") {
+		} else if (anchor === "middle") {
 			anchorOffset = scaledTextWidth / 2;
 		}
 		const left = offsetX + x * scale - anchorOffset;
@@ -146,10 +192,10 @@ export function createPrimitives(
 				style={{
 					position: "absolute",
 					left,
-					top: offsetY + (y - ASCENT * options.size) * scale,
+					top: offsetY + (y - ASCENT * size) * scale,
 					fontSize: scaledFontSize,
-					fontWeight: options.weight || DEFAULT_FONT_WEIGHT,
-					color: options.fill || INK,
+					fontWeight: weight,
+					color: fill,
 					// letterSpacing omitted: takumi's parser rejects negative values.
 					lineHeight: 1,
 					whiteSpace: "pre",
@@ -161,27 +207,31 @@ export function createPrimitives(
 	}
 
 	/** Big current temperature; shrinks only if it would run into the icon. */
-	function bigTemp(
-		x: number,
-		y: number,
-		size: number,
-		maxRight: number,
-		currentTemp: number | null,
-	) {
+	function bigTemp({ x, y, size, maxRight, currentTemp }: BigTempOptions) {
 		const tempText = formatDegrees(currentTemp);
 		const letterSpacing = BIG_TEMP_LETTER_SPACING_FACTOR * size;
 		const estimatedWidth =
-			estimateTextWidth(tempText, size, BIG_TEMP_FONT_WEIGHT) +
+			estimateTextWidth({
+				text: tempText,
+				size,
+				weight: BIG_TEMP_FONT_WEIGHT,
+			}) +
 			letterSpacing * tempText.length;
 		if (x + estimatedWidth <= maxRight) {
-			return txt(x, y, tempText, {
+			return txt({
+				x,
+				y,
+				content: tempText,
 				size,
 				weight: BIG_TEMP_FONT_WEIGHT,
 				letterSpacing,
 			});
 		}
 		const scaledSize = (size * (maxRight - x)) / estimatedWidth;
-		return txt(x, y, tempText, {
+		return txt({
+			x,
+			y,
+			content: tempText,
 			size: scaledSize,
 			weight: BIG_TEMP_FONT_WEIGHT,
 			letterSpacing: BIG_TEMP_LETTER_SPACING_FACTOR * scaledSize,
@@ -192,25 +242,8 @@ export function createPrimitives(
 
 export interface Primitives {
 	nextKey: () => string;
-	rect: (
-		x: number,
-		y: number,
-		width: number,
-		height: number,
-		extraProps?: Record<string, string | number>,
-	) => ReactElement;
-	txt: (
-		x: number,
-		y: number,
-		content: string,
-		options: TextOptions,
-	) => ReactElement;
-	bigTemp: (
-		x: number,
-		y: number,
-		size: number,
-		maxRight: number,
-		currentTemp: number | null,
-	) => ReactElement;
+	rect: (options: RectOptions) => ReactElement;
+	txt: (options: TextRenderOptions) => ReactElement;
+	bigTemp: (options: BigTempOptions) => ReactElement;
 }
 export type View = Model & Primitives;

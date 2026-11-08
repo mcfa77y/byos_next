@@ -29,71 +29,114 @@ const VIEWBOX_WIDTH_NARROW = 400;
 const WIDE_SCREEN_MIN_WIDTH = 600;
 const MEDIUM_SCREEN_MIN_HEIGHT = 360;
 const PORTRAIT_ASPECT_RATIO_THRESHOLD = 0.6;
-export function designFull(
-	viewHeight: number,
-	view: View,
-	hasGray: boolean,
-): ReactElement[] {
+export interface DesignOptions {
+	viewHeight: number;
+	view: View;
+	hasGray?: boolean;
+}
+
+export function designFull({
+	viewHeight,
+	view,
+	hasGray = false,
+}: DesignOptions): ReactElement[] {
 	const { rect, txt, bigTemp } = view;
 	const today = view.days[0];
 	const tomorrow = view.days[1];
 	const extraHeight = viewHeight - 480;
 	const out: ReactElement[] = [
-		txt(24, 43, trimToFit(view.station, 232, 20, 600), {
+		txt({
+			x: 24,
+			y: 43,
+			content: trimToFit({
+				text: view.station,
+				maxWidth: 232,
+				size: 20,
+				weight: 600,
+			}),
 			size: 20,
 			weight: 600,
 		}),
-		txt(24, 64, view.dateLong, { size: 14 }),
-		bigTemp(24, 178, 112, 191, view.now.temp),
-		icon(view.now.icon, 223.0, 122.9, 2.068, 3.2),
-		txt(24, 213, view.now.text, { size: 18, weight: 500 }),
-		...stats([24, 104, 184], 249, 277, 22, today, [24, 90, 156, 222], view),
-		rect(24, 335 + extraHeight, 232, 1),
+		txt({ x: 24, y: 64, content: view.dateLong, size: 14 }),
+		bigTemp({
+			x: 24,
+			y: 178,
+			size: 112,
+			maxRight: 191,
+			currentTemp: view.now.temp,
+		}),
+		icon({
+			name: view.now.icon,
+			centerX: 223.0,
+			centerY: 122.9,
+			scaleFactor: 2.068,
+			strokeWidth: 3.2,
+		}),
+		txt({ x: 24, y: 213, content: view.now.text, size: 18, weight: 500 }),
+		...stats({
+			columnXs: [24, 104, 184],
+			labelY: 249,
+			valueY: 277,
+			fontSize: 22,
+			day: today,
+			uvColumnXs: [24, 90, 156, 222],
+			view,
+		}),
+		rect({ x: 24, y: 335 + extraHeight, width: 232, height: 1 }),
 	];
 	if (tomorrow) {
 		out.push(
-			txt(
-				24,
-				359 + extraHeight,
-				`${view.i18n.tomorrow} · ${tomorrow.label.toUpperCase()}`,
-				{
-					size: 11,
-					weight: 600,
-					letterSpacing: 1,
-				},
-			),
-			icon(tomorrow.icon, 44.0, 389.9 + extraHeight, 1.32, 2.5),
-			txt(
-				76,
-				399 + extraHeight,
-				`${formatDegrees(tomorrow.high)} / ${formatDegrees(tomorrow.low)}`,
-				{
-					size: 24,
-					weight: 600,
-				},
-			),
+			txt({
+				x: 24,
+				y: 359 + extraHeight,
+				content: `${view.i18n.tomorrow} · ${tomorrow.label.toUpperCase()}`,
+				size: 11,
+				weight: 600,
+				letterSpacing: 1,
+			}),
+			icon({
+				name: tomorrow.icon,
+				centerX: 44.0,
+				centerY: 389.9 + extraHeight,
+				scaleFactor: 1.32,
+				strokeWidth: 2.5,
+			}),
+			txt({
+				x: 76,
+				y: 399 + extraHeight,
+				content: `${formatDegrees(tomorrow.high)} / ${formatDegrees(tomorrow.low)}`,
+				size: 24,
+				weight: 600,
+			}),
 		);
 		if (hasRain(tomorrow)) {
-			const rainPercentWidth = estimateTextWidth(`${tomorrow.rain}%`, 18, 500);
+			const rainPercentWidth = estimateTextWidth({
+				text: `${tomorrow.rain}%`,
+				size: 18,
+				weight: 500,
+			});
 			out.push(
-				txt(256, 396 + extraHeight, `${tomorrow.rain}%`, {
+				txt({
+					x: 256,
+					y: 396 + extraHeight,
+					content: `${tomorrow.rain}%`,
 					size: 18,
 					weight: 500,
 					anchor: "end",
 				}),
-				drop(
-					256 - rainPercentWidth - 6.5 - 4.15,
-					389.35 + extraHeight,
-					11.3,
-					(tomorrow.rain ?? 0) >= 50,
-				),
+				drop({
+					centerX: 256 - rainPercentWidth - 6.5 - 4.15,
+					centerY: 389.35 + extraHeight,
+					height: 11.3,
+					filled: (tomorrow.rain ?? 0) >= 50,
+				}),
 			);
 		}
 	}
 	out.push(
-		...chart(
-			view.days,
-			{
+		...chart({
+			days: view.days,
+			geom: {
 				startX: 296,
 				endX: 776,
 				gridTop: 48,
@@ -121,24 +164,31 @@ export function designFull(
 			},
 			view,
 			hasGray,
-		),
-		...footer(24, 776, 436 + extraHeight, 458 + extraHeight, 13, view),
+		}),
+		...footer({
+			startX: 24,
+			endX: 776,
+			ruleY: 436 + extraHeight,
+			textY: 458 + extraHeight,
+			fontSize: 13,
+			view,
+		}),
 	);
 	return out;
 }
 
-export function designPortrait(
-	viewHeight: number,
-	view: View,
-	hasGray: boolean,
-): ReactElement[] {
+export function designPortrait({
+	viewHeight,
+	view,
+	hasGray = false,
+}: DesignOptions): ReactElement[] {
 	const baseY = viewHeight - 86;
 	const extraHeight = Math.max(0, baseY - 78 - 262 - 420) / 2;
 	return [
 		...todayBlock(view),
-		...chart(
-			view.days,
-			{
+		...chart({
+			days: view.days,
+			geom: {
 				startX: 24,
 				endX: 376,
 				gridTop: 222,
@@ -167,8 +217,15 @@ export function designPortrait(
 			},
 			view,
 			hasGray,
-		),
-		...footer(24, 376, viewHeight - 42, viewHeight - 21, 12, view),
+		}),
+		...footer({
+			startX: 24,
+			endX: 376,
+			ruleY: viewHeight - 42,
+			textY: viewHeight - 21,
+			fontSize: 12,
+			view,
+		}),
 	];
 }
 
@@ -222,13 +279,22 @@ export function designColumn(viewHeight: number, view: View): ReactElement[] {
 		if (index === 0) {
 			const labelPillWidth = Math.max(
 				34,
-				estimateTextWidth(day.label, 15, 600) + 14,
+				estimateTextWidth({ text: day.label, size: 15, weight: 600 }) + 14,
 			);
 			out.push(
-				rect(40 - labelPillWidth / 2, centerY - 11, labelPillWidth, 22, {
-					rx: 11,
+				rect({
+					x: 40 - labelPillWidth / 2,
+					y: centerY - 11,
+					width: labelPillWidth,
+					height: 22,
+					extraProps: {
+						rx: 11,
+					},
 				}),
-				txt(40, baselineY, day.label, {
+				txt({
+					x: 40,
+					y: baselineY,
+					content: day.label,
 					size: 15,
 					weight: 600,
 					anchor: "middle",
@@ -237,18 +303,40 @@ export function designColumn(viewHeight: number, view: View): ReactElement[] {
 			);
 		} else {
 			out.push(
-				txt(40, baselineY, day.label, {
+				txt({
+					x: 40,
+					y: baselineY,
+					content: day.label,
 					size: 15,
 					weight: 600,
 					anchor: "middle",
 				}),
 			);
 		}
-		out.push(icon(day.icon, 82, centerY - 1, 0.9, 1.8));
+		out.push(
+			icon({
+				name: day.icon,
+				centerX: 82,
+				centerY: centerY - 1,
+				scaleFactor: 0.9,
+				strokeWidth: 1.8,
+			}),
+		);
 		if (hasRain(day)) {
 			out.push(
-				drop(116.5, centerY - 0.5, 9.6, (day.rain ?? 0) >= 50),
-				txt(126, baselineY, `${day.rain}%`, { size: 14, weight: 500 }),
+				drop({
+					centerX: 116.5,
+					centerY: centerY - 0.5,
+					height: 9.6,
+					filled: (day.rain ?? 0) >= 50,
+				}),
+				txt({
+					x: 126,
+					y: baselineY,
+					content: `${day.rain}%`,
+					size: 14,
+					weight: 500,
+				}),
 			);
 		}
 		out.push(
@@ -262,18 +350,33 @@ export function designColumn(viewHeight: number, view: View): ReactElement[] {
 				strokeWidth={2}
 			/>,
 			<circle key={nextKey()} cx={lowX} cy={centerY} r={3.3} fill={INK} />,
-			txt(lowX - 9, baselineY, formatDegrees(day.low), {
+			txt({
+				x: lowX - 9,
+				y: baselineY,
+				content: formatDegrees(day.low),
 				size: 15,
 				weight: 500,
 				anchor: "end",
 			}),
-			txt(highX + 9, baselineY, formatDegrees(day.high), {
+			txt({
+				x: highX + 9,
+				y: baselineY,
+				content: formatDegrees(day.high),
 				size: 16,
 				weight: 600,
 			}),
 		);
 	});
-	out.push(...footer(24, 376, viewHeight - 42, viewHeight - 21, 12, view));
+	out.push(
+		...footer({
+			startX: 24,
+			endX: 376,
+			ruleY: viewHeight - 42,
+			textY: viewHeight - 21,
+			fontSize: 12,
+			view,
+		}),
+	);
 	return out;
 }
 
@@ -282,40 +385,75 @@ export function designList(viewHeight: number, view: View): ReactElement[] {
 	const extraHeight = viewHeight - 480;
 	return [
 		...todayBlock(view),
-		...dayRows(235, 32 + Math.min(extraHeight / 6, 16), view),
-		...footer(24, 376, 438 + extraHeight, 459 + extraHeight, 12, view),
+		...dayRows({
+			firstBaselineY: 235,
+			rowPitch: 32 + Math.min(extraHeight / 6, 16),
+			view,
+		}),
+		...footer({
+			startX: 24,
+			endX: 376,
+			ruleY: 438 + extraHeight,
+			textY: 459 + extraHeight,
+			fontSize: 12,
+			view,
+		}),
 	];
 }
 
 /** Today on the left, compact curve on the right. */
-export function designWide(
-	viewHeight: number,
-	view: View,
-	hasGray: boolean,
-): ReactElement[] {
+export function designWide({
+	viewHeight,
+	view,
+	hasGray = false,
+}: DesignOptions): ReactElement[] {
 	const { txt, bigTemp } = view;
 	const extraHeight = viewHeight - 240;
 	return [
-		txt(24, 40, trimToFit(view.station, 248, 18, 600), {
+		txt({
+			x: 24,
+			y: 40,
+			content: trimToFit({
+				text: view.station,
+				maxWidth: 248,
+				size: 18,
+				weight: 600,
+			}),
 			size: 18,
 			weight: 600,
 		}),
-		txt(24, 60, view.dateShort, { size: 14 }),
-		bigTemp(24, 150 + extraHeight / 2, 80, 196, view.now.temp),
-		icon(view.now.icon, 222, 112 + extraHeight / 2, 1.5, 2.5),
-		txt(24, 182 + extraHeight / 2, view.now.text, { size: 16, weight: 500 }),
-		txt(
-			24,
-			214 + extraHeight,
-			view.updated + (view.credit ? ` · ${view.credit}` : ""),
-			{
-				size: 12,
-				weight: 500,
-			},
-		),
-		...chart(
-			view.days,
-			{
+		txt({ x: 24, y: 60, content: view.dateShort, size: 14 }),
+		bigTemp({
+			x: 24,
+			y: 150 + extraHeight / 2,
+			size: 80,
+			maxRight: 196,
+			currentTemp: view.now.temp,
+		}),
+		icon({
+			name: view.now.icon,
+			centerX: 222,
+			centerY: 112 + extraHeight / 2,
+			scaleFactor: 1.5,
+			strokeWidth: 2.5,
+		}),
+		txt({
+			x: 24,
+			y: 182 + extraHeight / 2,
+			content: view.now.text,
+			size: 16,
+			weight: 500,
+		}),
+		txt({
+			x: 24,
+			y: 214 + extraHeight,
+			content: view.updated + (view.credit ? ` · ${view.credit}` : ""),
+			size: 12,
+			weight: 500,
+		}),
+		...chart({
+			days: view.days,
+			geom: {
 				startX: 296,
 				endX: 776,
 				gridTop: 40,
@@ -344,7 +482,7 @@ export function designWide(
 			},
 			view,
 			hasGray,
-		),
+		}),
 	];
 }
 
@@ -352,37 +490,65 @@ export function designWide(
 export function designQuadrant(viewHeight: number, view: View): ReactElement[] {
 	const { txt, bigTemp } = view;
 	const extraHeight = viewHeight - 240;
-	const dateWidth = estimateTextWidth(view.dateShort, 14);
-	const station = trimToFit(view.station, 352 - dateWidth - 16, 18, 600);
+	const dateWidth = estimateTextWidth({ text: view.dateShort, size: 14 });
+	const station = trimToFit({
+		text: view.station,
+		maxWidth: 352 - dateWidth - 16,
+		size: 18,
+		weight: 600,
+	});
 	return [
-		txt(376, 40, view.dateShort, { size: 14, anchor: "end" }),
-		txt(24, 40, station, { size: 18, weight: 600 }),
-		bigTemp(24, 118 + extraHeight / 3, 80, 320, view.now.temp),
-		icon(view.now.icon, 347, 80 + extraHeight / 3, 1.5, 2.5),
-		txt(376, 118 + extraHeight / 3, view.now.text, {
+		txt({ x: 376, y: 40, content: view.dateShort, size: 14, anchor: "end" }),
+		txt({ x: 24, y: 40, content: station, size: 18, weight: 600 }),
+		bigTemp({
+			x: 24,
+			y: 118 + extraHeight / 3,
+			size: 80,
+			maxRight: 320,
+			currentTemp: view.now.temp,
+		}),
+		icon({
+			name: view.now.icon,
+			centerX: 347,
+			centerY: 80 + extraHeight / 3,
+			scaleFactor: 1.5,
+			strokeWidth: 2.5,
+		}),
+		txt({
+			x: 376,
+			y: 118 + extraHeight / 3,
+			content: view.now.text,
 			size: 16,
 			weight: 500,
 			anchor: "end",
 		}),
-		...stats(
-			[24, 144, 264],
-			150 + (extraHeight * 2) / 3,
-			173 + (extraHeight * 2) / 3,
-			20,
-			view.days[0],
-			[24, 144, 264, 332],
+		...stats({
+			columnXs: [24, 144, 264],
+			labelY: 150 + (extraHeight * 2) / 3,
+			valueY: 173 + (extraHeight * 2) / 3,
+			fontSize: 20,
+			day: view.days[0],
+			uvColumnXs: [24, 144, 264, 332],
 			view,
-		),
-		...footer(24, 376, 196 + extraHeight, 218 + extraHeight, 12, view),
+		}),
+		...footer({
+			startX: 24,
+			endX: 376,
+			ruleY: 196 + extraHeight,
+			textY: 218 + extraHeight,
+			fontSize: 12,
+			view,
+		}),
 	];
 }
 
-// ---- layout planning ---------------------------------------------------------
-// Picks [design, viewBox width, viewBox height] from the canvas aspect ratio —
-// the same shapes as the Terminus renderer's `plan('auto')` plus its tall-slot
-// variants (column/portrait) for half-vertical screens.
+export interface ClampOptions {
+	value: number;
+	min: number;
+	max: number;
+}
 
-function clamp(value: number, min: number, max: number) {
+function clamp({ value, min, max }: ClampOptions) {
 	return Math.max(min, Math.min(max, value));
 }
 
@@ -398,21 +564,25 @@ export function plan(
 		return [
 			DESIGN_FULL,
 			VIEWBOX_WIDTH_WIDE,
-			clamp(VIEWBOX_WIDTH_WIDE / aspectRatio, 480, 680),
+			clamp({ value: VIEWBOX_WIDTH_WIDE / aspectRatio, min: 480, max: 680 }),
 		];
 	}
 	if (canvasWidth >= WIDE_SCREEN_MIN_WIDTH) {
 		return [
 			DESIGN_WIDE,
 			VIEWBOX_WIDTH_WIDE,
-			clamp(VIEWBOX_WIDTH_WIDE / aspectRatio, 240, 400),
+			clamp({ value: VIEWBOX_WIDTH_WIDE / aspectRatio, min: 240, max: 400 }),
 		];
 	}
 	if (VIEWBOX_WIDTH_NARROW / aspectRatio >= TALL) {
 		return [
 			DESIGN_COLUMN,
 			VIEWBOX_WIDTH_NARROW,
-			clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, TALL, 1400),
+			clamp({
+				value: VIEWBOX_WIDTH_NARROW / aspectRatio,
+				min: TALL,
+				max: 1400,
+			}),
 		];
 	}
 	if (canvasHeight >= MEDIUM_SCREEN_MIN_HEIGHT) {
@@ -420,17 +590,25 @@ export function plan(
 			? [
 					DESIGN_PORTRAIT,
 					VIEWBOX_WIDTH_NARROW,
-					clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, 520, 1400),
+					clamp({
+						value: VIEWBOX_WIDTH_NARROW / aspectRatio,
+						min: 520,
+						max: 1400,
+					}),
 				]
 			: [
 					DESIGN_LIST,
 					VIEWBOX_WIDTH_NARROW,
-					clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, 480, 760),
+					clamp({
+						value: VIEWBOX_WIDTH_NARROW / aspectRatio,
+						min: 480,
+						max: 760,
+					}),
 				];
 	}
 	return [
 		DESIGN_QUADRANT,
 		VIEWBOX_WIDTH_NARROW,
-		clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, 240, 340),
+		clamp({ value: VIEWBOX_WIDTH_NARROW / aspectRatio, min: 240, max: 340 }),
 	];
 }

@@ -21,11 +21,13 @@ const RAIN_DROP_FILLED_THRESHOLD = 50;
 
 const sign = (value: number) => (value < 0 ? -1 : 1);
 
-const edgeSlope = (
-	pointA: number[],
-	pointB: number[],
-	neighborTangent: number,
-) => {
+export interface EdgeSlopeOptions {
+	pointA: number[];
+	pointB: number[];
+	neighborTangent: number;
+}
+
+const edgeSlope = ({ pointA, pointB, neighborTangent }: EdgeSlopeOptions) => {
 	const deltaX = pointB[0] - pointA[0];
 	return deltaX
 		? (3 * (pointB[1] - pointA[1])) / deltaX / 2 - neighborTangent / 2
@@ -55,12 +57,16 @@ export function monotone(points: number[][], vertical = false): string {
 					0.5 * Math.abs(weightedSlope),
 				) || 0;
 	}
-	tangents[0] = edgeSlope(points[0], points[1], tangents[1] || 0);
-	tangents[pointCount - 1] = edgeSlope(
-		points[pointCount - 2],
-		points[pointCount - 1],
-		tangents[pointCount - 2] || 0,
-	);
+	tangents[0] = edgeSlope({
+		pointA: points[0],
+		pointB: points[1],
+		neighborTangent: tangents[1] || 0,
+	});
+	tangents[pointCount - 1] = edgeSlope({
+		pointA: points[pointCount - 2],
+		pointB: points[pointCount - 1],
+		neighborTangent: tangents[pointCount - 2] || 0,
+	});
 	let pathData = `M${formatPoint(points[0][0], points[0][1])}`;
 	for (let i = 0; i < pointCount - 1; i++) {
 		const deltaXThird = (points[i + 1][0] - points[i][0]) / 3;
@@ -98,16 +104,26 @@ export interface ChartGeom {
 	pillY: number;
 }
 
+export interface StatsOptions {
+	columnXs: number[];
+	labelY: number;
+	valueY: number;
+	fontSize: number;
+	day: ModelDay;
+	uvColumnXs?: number[];
+	view: View;
+}
+
 /** uvColumnXs: the columns used instead of columnXs when today's UV index is shown. */
-export function stats(
-	columnXs: number[],
-	labelY: number,
-	valueY: number,
-	fontSize: number,
-	day: ModelDay,
-	uvColumnXs: number[] | undefined,
-	view: View,
-): ReactElement[] {
+export function stats({
+	columnXs,
+	labelY,
+	valueY,
+	fontSize,
+	day,
+	uvColumnXs,
+	view,
+}: StatsOptions): ReactElement[] {
 	const { txt } = view;
 	const showUv = view.showUv && uvColumnXs && day.uv != null;
 	const items: [string, string][] = [
@@ -118,39 +134,55 @@ export function stats(
 	if (showUv) items.push(["UV", String(day.uv)]);
 	const positions = showUv ? uvColumnXs : columnXs;
 	return items.flatMap((statItem, index) => [
-		txt(positions[index], labelY, statItem[0], {
+		txt({
+			x: positions[index],
+			y: labelY,
+			content: statItem[0],
 			size: 11,
 			weight: 600,
 			letterSpacing: 1,
 		}),
-		txt(positions[index], valueY, statItem[1], {
+		txt({
+			x: positions[index],
+			y: valueY,
+			content: statItem[1],
 			size: fontSize,
 			weight: 600,
 		}),
 	]);
 }
 
-export function footer(
-	startX: number,
-	endX: number,
-	ruleY: number,
-	textY: number,
-	fontSize: number,
-	view: View,
-): ReactElement[] {
+export interface FooterOptions {
+	startX: number;
+	endX: number;
+	ruleY: number;
+	textY: number;
+	fontSize: number;
+	view: View;
+}
+
+export function footer({
+	startX,
+	endX,
+	ruleY,
+	textY,
+	fontSize,
+	view,
+}: FooterOptions): ReactElement[] {
 	const { rect, txt } = view;
 	return [
-		rect(startX, ruleY, endX - startX, 1),
-		txt(
-			startX,
-			textY,
-			view.i18n.title + (view.credit ? ` · ${view.credit}` : ""),
-			{
-				size: fontSize,
-				weight: 500,
-			},
-		),
-		txt(endX, textY, view.updated, {
+		rect({ x: startX, y: ruleY, width: endX - startX, height: 1 }),
+		txt({
+			x: startX,
+			y: textY,
+			content: view.i18n.title + (view.credit ? ` · ${view.credit}` : ""),
+			size: fontSize,
+			weight: 500,
+		}),
+		txt({
+			x: endX,
+			y: textY,
+			content: view.updated,
 			size: fontSize,
 			weight: 500,
 			anchor: "end",
@@ -158,13 +190,20 @@ export function footer(
 	];
 }
 
+export interface ChartOptions {
+	days: ModelDay[];
+	geom: ChartGeom;
+	view: View;
+	hasGray: boolean;
+}
+
 /** 7-day chart: highs, lows, chance of rain, one icon per day. */
-export function chart(
-	days: ModelDay[],
-	geom: ChartGeom,
-	view: View,
-	hasGray: boolean,
-): ReactElement[] {
+export function chart({
+	days,
+	geom,
+	view,
+	hasGray,
+}: ChartOptions): ReactElement[] {
 	const { nextKey, rect, txt } = view;
 	const out: ReactElement[] = [];
 	const dayCount = days.length;
@@ -218,20 +257,24 @@ export function chart(
 			/>,
 		);
 		for (let x = geom.startX; x < geom.endX; x += 4) {
-			out.push(rect(x, geom.rainTopY, 1, 1));
+			out.push(rect({ x, y: geom.rainTopY, width: 1, height: 1 }));
 		}
 	}
 	if (geom.showLegend && view.hasRain) {
-		const legendWidth = estimateTextWidth(view.i18n.legend, 11, 500) + 10;
+		const legendWidth =
+			estimateTextWidth({ text: view.i18n.legend, size: 11, weight: 500 }) + 10;
 		out.push(
-			rect(
-				geom.endX - legendWidth - 5,
-				geom.rainTopY + 3,
-				legendWidth + 5,
-				16,
-				{ fill: PAPER },
-			),
-			txt(geom.endX - 5, geom.rainTopY + 15, view.i18n.legend, {
+			rect({
+				x: geom.endX - legendWidth - 5,
+				y: geom.rainTopY + 3,
+				width: legendWidth + 5,
+				height: 16,
+				extraProps: { fill: PAPER },
+			}),
+			txt({
+				x: geom.endX - 5,
+				y: geom.rainTopY + 15,
+				content: view.i18n.legend,
 				size: 11,
 				weight: 500,
 				anchor: "end",
@@ -239,7 +282,12 @@ export function chart(
 		);
 	}
 	out.push(
-		rect(geom.startX, geom.baseY, geom.endX - geom.startX, 1),
+		rect({
+			x: geom.startX,
+			y: geom.baseY,
+			width: geom.endX - geom.startX,
+			height: 1,
+		}),
 		<path
 			key={nextKey()}
 			d={monotone(withChartEnds(highs.map(tempToY)))}
@@ -277,39 +325,52 @@ export function chart(
 				r={geom.lowRadius}
 				fill={INK}
 			/>,
-			txt(centerX, highY + geom.highLabelOffset, formatDegrees(day.high), {
+			txt({
+				x: centerX,
+				y: highY + geom.highLabelOffset,
+				content: formatDegrees(day.high),
 				size: geom.highFontSize,
 				weight: 600,
 				anchor: "middle",
 			}),
-			txt(centerX, lowY + geom.lowLabelOffset, formatDegrees(day.low), {
+			txt({
+				x: centerX,
+				y: lowY + geom.lowLabelOffset,
+				content: formatDegrees(day.low),
 				size: geom.lowFontSize,
 				weight: 500,
 				anchor: "middle",
 			}),
-			icon(
-				day.icon,
+			icon({
+				name: day.icon,
 				centerX,
-				geom.iconCenterY || (highY + lowY) / 2,
-				geom.iconScale,
-				geom.iconStrokeWidth,
-			),
+				centerY: geom.iconCenterY || (highY + lowY) / 2,
+				scaleFactor: geom.iconScale,
+				strokeWidth: geom.iconStrokeWidth,
+			}),
 		);
 		if (index === 0) {
 			const labelPillWidth = Math.max(
 				geom.pillWidth,
-				estimateTextWidth(day.label, geom.dayFontSize, 600) +
+				estimateTextWidth({
+					text: day.label,
+					size: geom.dayFontSize,
+					weight: 600,
+				}) +
 					geom.pillHeight * 0.6,
 			);
 			out.push(
-				rect(
-					centerX - labelPillWidth / 2,
-					geom.pillY,
-					labelPillWidth,
-					geom.pillHeight,
-					{ rx: geom.pillHeight / 2 },
-				),
-				txt(centerX, geom.dayLabelY, day.label, {
+				rect({
+					x: centerX - labelPillWidth / 2,
+					y: geom.pillY,
+					width: labelPillWidth,
+					height: geom.pillHeight,
+					extraProps: { rx: geom.pillHeight / 2 },
+				}),
+				txt({
+					x: centerX,
+					y: geom.dayLabelY,
+					content: day.label,
 					size: geom.dayFontSize,
 					weight: 600,
 					anchor: "middle",
@@ -318,7 +379,10 @@ export function chart(
 			);
 		} else {
 			out.push(
-				txt(centerX, geom.dayLabelY, day.label, {
+				txt({
+					x: centerX,
+					y: geom.dayLabelY,
+					content: day.label,
 					size: geom.dayFontSize,
 					weight: 600,
 					anchor: "middle",
@@ -329,12 +393,18 @@ export function chart(
 	return out;
 }
 
+export interface DayRowsOptions {
+	firstBaselineY: number;
+	rowPitch: number;
+	view: View;
+}
+
 /** The next six days as rows (day, icon, rain, low–high bar); first baseline y0. */
-export function dayRows(
-	firstBaselineY: number,
-	rowPitch: number,
-	view: View,
-): ReactElement[] {
+export function dayRows({
+	firstBaselineY,
+	rowPitch,
+	view,
+}: DayRowsOptions): ReactElement[] {
 	const { rect, txt } = view;
 	const rows = view.days.slice(ROW_DAYS_START_INDEX, ROW_DAYS_END_INDEX);
 	if (!rows.length) return [];
@@ -347,22 +417,43 @@ export function dayRows(
 	rows.forEach((day, index) => {
 		const baselineY = firstBaselineY + rowPitch * index;
 		out.push(
-			txt(24, baselineY, day.label, { size: 15, weight: 600 }),
-			icon(day.icon, 77, baselineY - 6, 0.86, 1.75),
+			txt({
+				x: 24,
+				y: baselineY,
+				content: day.label,
+				size: 15,
+				weight: 600,
+			}),
+			icon({
+				name: day.icon,
+				centerX: 77,
+				centerY: baselineY - 6,
+				scaleFactor: 0.86,
+				strokeWidth: 1.75,
+			}),
 		);
 		if (hasRain(day)) {
 			out.push(
-				drop(
-					114.5,
-					baselineY - 5.5,
-					9.6,
-					(day.rain ?? 0) >= RAIN_DROP_FILLED_THRESHOLD,
-				),
-				txt(124, baselineY, `${day.rain}%`, { size: 14, weight: 500 }),
+				drop({
+					centerX: 114.5,
+					centerY: baselineY - 5.5,
+					height: 9.6,
+					filled: (day.rain ?? 0) >= RAIN_DROP_FILLED_THRESHOLD,
+				}),
+				txt({
+					x: 124,
+					y: baselineY,
+					content: `${day.rain}%`,
+					size: 14,
+					weight: 500,
+				}),
 			);
 		}
 		out.push(
-			txt(194, baselineY, formatDegrees(day.low), {
+			txt({
+				x: 194,
+				y: baselineY,
+				content: formatDegrees(day.low),
 				size: 15,
 				weight: 500,
 				anchor: "end",
@@ -373,19 +464,22 @@ export function dayRows(
 			x < BAR_CHART_END_X;
 			x += BAR_CHART_STEP_X
 		) {
-			out.push(rect(x, baselineY - 7, 1, 2));
+			out.push(rect({ x, y: baselineY - 7, width: 1, height: 2 }));
 		}
 		out.push(
-			rect(
-				tempToBarX(day.low ?? 0),
-				baselineY - 10,
-				tempToBarX(day.high ?? 0) - tempToBarX(day.low ?? 0) || 1,
-				8,
-				{
+			rect({
+				x: tempToBarX(day.low ?? 0),
+				y: baselineY - 10,
+				width: tempToBarX(day.high ?? 0) - tempToBarX(day.low ?? 0) || 1,
+				height: 8,
+				extraProps: {
 					rx: 4,
 				},
-			),
-			txt(371.3, baselineY, formatDegrees(day.high), {
+			}),
+			txt({
+				x: 371.3,
+				y: baselineY,
+				content: formatDegrees(day.high),
 				size: 15,
 				weight: 600,
 				anchor: "end",
@@ -398,23 +492,47 @@ export function dayRows(
 /** Today block shared by the list/portrait/column designs (y 0–208). */
 export function todayBlock(view: View): ReactElement[] {
 	const { rect, txt, bigTemp } = view;
-	const dateWidth = estimateTextWidth(view.dateShort, 14);
-	const station = trimToFit(view.station, 352 - dateWidth - 16, 18, 600);
+	const dateWidth = estimateTextWidth({ text: view.dateShort, size: 14 });
+	const station = trimToFit({
+		text: view.station,
+		maxWidth: 352 - dateWidth - 16,
+		size: 18,
+		weight: 600,
+	});
 	return [
-		txt(376, 40, view.dateShort, { size: 14, anchor: "end" }),
-		txt(24, 40, station, { size: 18, weight: 600 }),
-		bigTemp(24, 134, 96, 318, view.now.temp),
-		icon(view.now.icon, 347, 87.85, 1.826, 2.8),
-		txt(376, 133, view.now.text, { size: 16, weight: 500, anchor: "end" }),
-		...stats(
-			[24, 144, 264],
-			166,
-			189,
-			20,
-			view.days[0],
-			[24, 144, 264, 332],
+		txt({ x: 376, y: 40, content: view.dateShort, size: 14, anchor: "end" }),
+		txt({ x: 24, y: 40, content: station, size: 18, weight: 600 }),
+		bigTemp({
+			x: 24,
+			y: 134,
+			size: 96,
+			maxRight: 318,
+			currentTemp: view.now.temp,
+		}),
+		icon({
+			name: view.now.icon,
+			centerX: 347,
+			centerY: 87.85,
+			scaleFactor: 1.826,
+			strokeWidth: 2.8,
+		}),
+		txt({
+			x: 376,
+			y: 133,
+			content: view.now.text,
+			size: 16,
+			weight: 500,
+			anchor: "end",
+		}),
+		...stats({
+			columnXs: [24, 144, 264],
+			labelY: 166,
+			valueY: 189,
+			fontSize: 20,
+			day: view.days[0],
+			uvColumnXs: [24, 144, 264, 332],
 			view,
-		),
-		rect(24, 208, 352, 1),
+		}),
+		rect({ x: 24, y: 208, width: 352, height: 1 }),
 	];
 }

@@ -98,11 +98,13 @@ function upperIntersection(
 	return point1.y < point2.y ? point1 : point2;
 }
 
-function arcTo(
-	circle: { x: number; y: number; r: number },
-	from: { x: number; y: number },
-	to: { x: number; y: number },
-) {
+export interface ArcToOptions {
+	circle: { x: number; y: number; r: number };
+	from: { x: number; y: number };
+	to: { x: number; y: number };
+}
+
+function arcTo({ circle, from, to }: ArcToOptions) {
 	let span =
 		Math.atan2(to.y - circle.y, to.x - circle.x) -
 		Math.atan2(from.y - circle.y, from.x - circle.x);
@@ -130,7 +132,7 @@ function cloudPath(cloudParams: number[]): string {
 	const leftTopJoin = upperIntersection(leftCircle, topCircle);
 	const topRightJoin = upperIntersection(topCircle, rightCircle);
 	const end = { x: rightCircle.x, y: cloudParams[0] };
-	return `M${start.x} ${start.y}${arcTo(leftCircle, start, leftTopJoin)}${arcTo(topCircle, leftTopJoin, topRightJoin)}${arcTo(rightCircle, topRightJoin, end)}Z`;
+	return `M${start.x} ${start.y}${arcTo({ circle: leftCircle, from: start, to: leftTopJoin })}${arcTo({ circle: topCircle, from: leftTopJoin, to: topRightJoin })}${arcTo({ circle: rightCircle, from: topRightJoin, to: end })}Z`;
 }
 
 function moonPath(moonParams: number[]): string {
@@ -167,14 +169,21 @@ function moonPath(moonParams: number[]): string {
 	};
 	return `M${point1.x} ${point1.y}A${outerCircle.r} ${outerCircle.r} 0 1 0 ${point2.x} ${point2.y}A${innerCircle.r} ${innerCircle.r} 0 0 1 ${point1.x} ${point1.y}Z`;
 }
+export interface IconOptions {
+	name: string;
+	centerX: number;
+	centerY: number;
+	scaleFactor: number;
+	strokeWidth: number;
+}
 
-export function icon(
-	name: string,
-	centerX: number,
-	centerY: number,
-	scaleFactor: number,
-	strokeWidth: number,
-) {
+export function icon({
+	name,
+	centerX,
+	centerY,
+	scaleFactor,
+	strokeWidth,
+}: IconOptions) {
 	const spec = ICONS[name] || ICONS.cloudy;
 	const children: ReactNode[] = [];
 	const add = (
@@ -300,13 +309,15 @@ const DROP_TOP_CONTROL_X_FACTOR = 0.12;
 const DROP_TOP_CONTROL_Y_FACTOR = 0.22;
 const DROP_BOTTOM_CONTROL_OFFSET_FACTOR = 0.9;
 
+export interface DropOptions {
+	centerX: number;
+	centerY: number;
+	height: number;
+	filled: boolean;
+}
+
 /** Rain drop: filled from 50% chance of rain, outlined below. */
-export function drop(
-	centerX: number,
-	centerY: number,
-	height: number,
-	filled: boolean,
-) {
+export function drop({ centerX, centerY, height, filled }: DropOptions) {
 	const width = height * DROP_WIDTH_TO_HEIGHT_RATIO;
 	const topY = centerY - height / 2;
 	const bottomRadius = width / 2;
