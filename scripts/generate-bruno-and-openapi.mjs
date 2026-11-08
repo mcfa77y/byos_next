@@ -83,18 +83,20 @@ for (const [routePath, methods] of Object.entries(spec.paths)) {
 		const fullUrl = `{{base_url}}${brunoUrlPath}`;
 
 		const lines = [];
-		lines.push("meta {");
-		lines.push(`  name: ${reqName}`);
-		lines.push("  type: http");
-		lines.push(`  seq: ${++count}`);
-		lines.push("}");
-		lines.push("");
-		lines.push(`${method} {`);
-		lines.push(`  url: ${fullUrl}`);
-		lines.push(`  body: ${op.requestBody ? "json" : "none"}`);
-		lines.push("  auth: inherit");
-		lines.push("}");
-		lines.push("");
+		lines.push(
+			"meta {",
+			`  name: ${reqName}`,
+			"  type: http",
+			`  seq: ${++count}`,
+			"}",
+			"",
+			`${method} {`,
+			`  url: ${fullUrl}`,
+			`  body: ${op.requestBody ? "json" : "none"}`,
+			"  auth: inherit",
+			"}",
+			"",
+		);
 
 		// Params: query, path
 		const queryParams = (op.parameters || []).filter((p) => p.in === "query");
@@ -105,24 +107,22 @@ for (const [routePath, methods] of Object.entries(spec.paths)) {
 					p.schema?.example !== undefined ? String(p.schema.example) : "";
 				lines.push(`  ${p.name}: ${val}`);
 			}
-			lines.push("}");
-			lines.push("");
+			lines.push("}", "");
 		}
 
 		const pathParams = (op.parameters || []).filter((p) => p.in === "path");
 		if (pathParams.length > 0) {
 			lines.push("params:path {");
 			for (const p of pathParams) {
-				const val =
-					p.schema?.example !== undefined
-						? String(p.schema.example)
-						: p.name === "id"
-							? "{{device_id}}"
-							: "";
+				let val = "";
+				if (p.schema?.example !== undefined) {
+					val = String(p.schema.example);
+				} else if (p.name === "id") {
+					val = "{{device_id}}";
+				}
 				lines.push(`  ${p.name}: ${val}`);
 			}
-			lines.push("}");
-			lines.push("");
+			lines.push("}", "");
 		}
 
 		// Body if present
@@ -131,25 +131,26 @@ for (const [routePath, methods] of Object.entries(spec.paths)) {
 			const exampleBody = {};
 			if (schema.properties) {
 				for (const [k, v] of Object.entries(schema.properties)) {
-					exampleBody[k] =
-						v.example !== undefined
-							? v.example
-							: v.type === "object"
-								? {}
-								: v.type === "array"
-									? []
-									: null;
+					if (v.example !== undefined) {
+						exampleBody[k] = v.example;
+					} else if (v.type === "object") {
+						exampleBody[k] = {};
+					} else if (v.type === "array") {
+						exampleBody[k] = [];
+					} else {
+						exampleBody[k] = null;
+					}
 				}
 			}
-			lines.push("body:json {");
 			lines.push(
+				"body:json {",
 				JSON.stringify(exampleBody, null, 2)
 					.split("\n")
 					.map((l) => `  ${l}`)
 					.join("\n"),
+				"}",
+				"",
 			);
-			lines.push("}");
-			lines.push("");
 		}
 
 		// Headers
@@ -163,8 +164,7 @@ for (const [routePath, methods] of Object.entries(spec.paths)) {
 					p.schema?.example !== undefined ? String(p.schema.example) : "";
 				lines.push(`  ${p.name}: ${val}`);
 			}
-			lines.push("}");
-			lines.push("");
+			lines.push("}", "");
 		}
 
 		fs.writeFileSync(path.join(folder, filename), lines.join("\n"), "utf-8");

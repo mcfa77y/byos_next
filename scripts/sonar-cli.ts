@@ -54,7 +54,7 @@ export async function readTokenFromProperties(
 ): Promise<string | undefined> {
 	try {
 		const content = await fs.readFile(propertiesPath, "utf-8");
-		const match = content.match(/^sonar\.token=(.+)$/m);
+		const match = /^sonar\.token=(.+)$/m.exec(content);
 		if (match?.[1]?.trim()) {
 			return match[1].trim();
 		}
