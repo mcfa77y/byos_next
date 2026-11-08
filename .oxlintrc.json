@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn"],
+  "categories": {
+    "correctness": "deny",
+    "perf": "warn",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-await-in-loop": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "unicorn/prefer-node-protocol": "off",
+    "unicorn/no-new-array": "off"
+  },
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "coverage",
+    "dist",
+    "build",
+    "pnpm-lock.yaml",
+    "**/*.generated.ts"
+  ]
+}

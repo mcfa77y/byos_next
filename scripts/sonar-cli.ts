@@ -385,7 +385,7 @@ export async function getCoverageCommand(options: {
 		);
 
 		const threshold = Number(
-			gate.projectStatus.conditions?.find((c) => c.metricKey === "new_coverage")
+			gate.projectStatus.conditions?.find((cond) => cond.metricKey === "new_coverage")
 				?.errorThreshold ?? "80",
 		);
 
