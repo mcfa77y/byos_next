@@ -417,11 +417,12 @@ function getHealthItems(
 	const ModeIcon = getModeIcon(mode);
 	const modeText = getModeText(mode);
 
-	const batteryText = !battery
-		? "No batt"
-		: battery.isCharging
+	let batteryText = "No batt";
+	if (battery) {
+		batteryText = battery.isCharging
 			? "Charging"
 			: `${battery.batteryPercentage}%`;
+	}
 	const batteryStateDesc = battery?.isCharging
 		? "charging"
 		: `${battery?.batteryPercentage}%`;
