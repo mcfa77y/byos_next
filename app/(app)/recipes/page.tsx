@@ -167,7 +167,9 @@ async function RecipesGrid() {
 		{} as Record<string, CatalogRecipe[]>,
 	);
 
-	const sortedCategories = Object.keys(recipesByCategory).sort();
+	const sortedCategories = Object.keys(recipesByCategory).sort((a, b) =>
+		a.localeCompare(b),
+	);
 
 	return (
 		<div className="space-y-10">

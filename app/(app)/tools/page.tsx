@@ -105,7 +105,9 @@ const ToolsGrid = () => {
 	);
 
 	// Sort categories alphabetically
-	const sortedCategories = Object.keys(toolsByCategory).sort();
+	const sortedCategories = Object.keys(toolsByCategory).sort((a, b) =>
+		a.localeCompare(b),
+	);
 
 	return (
 		<div className="flex flex-col">
