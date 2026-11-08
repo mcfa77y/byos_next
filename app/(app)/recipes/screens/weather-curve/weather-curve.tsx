@@ -275,15 +275,21 @@ function buildModel(data: Data, params: Params): Model {
 	const u = params.units?.trim().toLowerCase();
 	const fahrenheit =
 		u !== "celsius" && u !== "celcius" && u !== "c" && u !== "metric";
-	const temp = (c: number | null) =>
-		c == null ? null : Math.round(fahrenheit ? (c * 9) / 5 + 32 : c);
+	const temp = (c: number | null) => {
+		if (c == null) return null;
+		return Math.round(fahrenheit ? (c * 9) / 5 + 32 : c);
+	};
 	const hm = data.updated.slice(11, 16);
 	const h = Number.parseInt(hm, 10);
-	const clock = !hm
-		? ""
-		: !fahrenheit
-			? hm
-			: `${h % 12 || 12}${hm.slice(2)}${h < 12 ? " AM" : " PM"}`;
+	let clock = "";
+	if (hm) {
+		if (fahrenheit) {
+			const period = h < 12 ? " AM" : " PM";
+			clock = `${h % 12 || 12}${hm.slice(2)}${period}`;
+		} else {
+			clock = hm;
+		}
+	}
 	const first = data.days[0];
 	return {
 		t,
@@ -321,7 +327,7 @@ function charW(ch: string): number {
 	if (/[A-Z]/.test(ch)) return WIDE;
 	if ("m w".includes(ch)) return 0.82;
 	if (/[a-z]/.test(ch)) return MED;
-	if (/[0-9]/.test(ch)) return 0.57;
+	if (/\d/.test(ch)) return 0.57;
 	if ("iltfj.,'()°".includes(ch)) return NARROW;
 	return 0.45; // spaces, punctuation, fallback
 }
@@ -383,10 +389,13 @@ function txt(
 ): ReactElement {
 	const size = o.size * scale;
 	const w = estW(s, o.size, o.weight || 400) * scale;
-	const left =
-		offX +
-		x * scale -
-		(o.anchor === "end" ? w : o.anchor === "middle" ? w / 2 : 0);
+	let anchorOffset = 0;
+	if (o.anchor === "end") {
+		anchorOffset = w;
+	} else if (o.anchor === "middle") {
+		anchorOffset = w / 2;
+	}
+	const left = offX + x * scale - anchorOffset;
 	return (
 		<div
 			key={k()}
@@ -565,12 +574,15 @@ function icon(name: string, cx: number, cy: number, kf: number, sw: number) {
 	const add = (
 		tag: "line" | "path" | "circle",
 		a: Record<string, string | number>,
-	) =>
-		tag === "line"
-			? children.push(<line key={k()} {...a} />)
-			: tag === "path"
-				? children.push(<path key={k()} {...a} />)
-				: children.push(<circle key={k()} {...a} />);
+	) => {
+		if (tag === "line") {
+			children.push(<line key={k()} {...a} />);
+		} else if (tag === "path") {
+			children.push(<path key={k()} {...a} />);
+		} else {
+			children.push(<circle key={k()} {...a} />);
+		}
+	};
 
 	if (spec.sun) {
 		const s = spec.sun;
@@ -852,8 +864,8 @@ function chart(
 			}),
 		);
 	}
-	out.push(rect(g.x0, g.base, g.x1 - g.x0, 1));
 	out.push(
+		rect(g.x0, g.base, g.x1 - g.x0, 1),
 		<path
 			key={k()}
 			d={monotone(withEnds(highs.map(ty)))}
@@ -1294,13 +1306,13 @@ export default function WeatherCurve({
 	screen,
 	params,
 	data,
-}: {
+}: Readonly<{
 	width?: number;
 	height?: number;
 	screen?: ScreenProfile;
 	params: Params;
 	data: Data;
-}) {
+}>) {
 	const profile = screen ?? createScreenProfile({ width, height });
 	const cw = profile.logicalWidth;
 	const ch = profile.logicalHeight;
