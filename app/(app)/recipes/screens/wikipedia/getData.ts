@@ -303,6 +303,7 @@ async function fetchWithRetry(
 			// Create a new error that doesn't have the complex properties that might cause serialization issues
 			throw new Error(
 				`Request timed out for URL: ${url} after ${3 - retries} attempts`,
+				{ cause: error },
 			);
 		}
 
@@ -823,6 +824,7 @@ async function getFallbackArticle(): Promise<WikipediaData> {
 			if (!response.ok) {
 				throw new Error(
 					`Wikipedia API responded with status: ${response.status}`,
+					{ cause: fallbackError },
 				);
 			}
 
@@ -908,7 +910,9 @@ const getCachedWikipediaData = unstable_cache(
 			// Convert the error to a clean one to avoid serialization issues
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
-			throw new Error(`Failed to fetch Wikipedia data: ${errorMessage}`);
+			throw new Error(`Failed to fetch Wikipedia data: ${errorMessage}`, {
+				cause: error,
+			});
 		}
 	},
 	["wikipedia-random-article"],

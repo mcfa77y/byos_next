@@ -136,7 +136,7 @@ export async function executeSqlStatements(): Promise<SqlExecutionState> {
 			return `postgresql://${username}:${password}@${parsedUrl.host}${parsedUrl.pathname}${parsedUrl.search}`;
 		} catch (error) {
 			console.error("Error transforming URL:", error);
-			throw new Error("Invalid URL format");
+			throw new Error("Invalid URL format", { cause: error });
 		}
 	}
 
