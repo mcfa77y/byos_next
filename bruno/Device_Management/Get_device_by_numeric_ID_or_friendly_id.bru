@@ -1,0 +1,15 @@
+meta {
+  name: Get device by numeric ID or friendly_id
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{base_url}}/api/devices/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: INKY73
+}

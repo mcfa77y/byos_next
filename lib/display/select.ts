@@ -60,7 +60,7 @@ export async function selectDisplayForDevice(
 		| "screen_orientation"
 		| "screen_width"
 		| "screen_height"
-	>,
+	> & { api_key?: string | null },
 	hints: RequestHints,
 ): Promise<DisplaySelection> {
 	const profile = await getDeviceProfile(device.model, device.palette_id);
@@ -87,6 +87,9 @@ export async function selectDisplayForDevice(
 	}
 	if (profile.palette?.id) {
 		params.set("palette_id", profile.palette.id);
+	}
+	if (device.api_key) {
+		params.set("access_token", device.api_key);
 	}
 	const baseQueryParams = params.toString();
 

@@ -1,0 +1,15 @@
+meta {
+  name: Upload plugin setting YAML archive
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{base_url}}/api/plugin_settings/:id/archive
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Update Liquid markup for a specific screen size
+  type: http
+  seq: 21
+}
+
+put {
+  url: {{base_url}}/api/plugin_settings/:id/markup/:size
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+  size: full
+}
+
+body:json {
+  {
+    "content": "<div class='layout'>{{ headline }}</div>"
+  }
+}

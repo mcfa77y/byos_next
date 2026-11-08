@@ -1,0 +1,23 @@
+meta {
+  name: Update device sleep mode settings
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{base_url}}/api/devices/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: INKY73
+}
+
+body:json {
+  {
+    "sleep_mode_enabled": true,
+    "sleep_start_time": 1380,
+    "sleep_end_time": 420
+  }
+}

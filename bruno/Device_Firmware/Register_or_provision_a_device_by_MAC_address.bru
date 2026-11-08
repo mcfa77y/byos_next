@@ -1,0 +1,15 @@
+meta {
+  name: Register or provision a device by MAC address
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/setup
+  body: none
+  auth: inherit
+}
+
+headers {
+  Model: inky_frame_7_3
+}

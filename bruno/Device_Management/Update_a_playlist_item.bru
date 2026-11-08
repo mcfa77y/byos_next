@@ -1,0 +1,21 @@
+meta {
+  name: Update a playlist item
+  type: http
+  seq: 11
+}
+
+patch {
+  url: {{base_url}}/api/playlists/items/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "visible": true
+  }
+}

@@ -22,6 +22,8 @@ export const reactRecipeLoaders: Record<string, RecipeModuleLoader> = {
 	"simple-text": () =>
 		import("../../app/(app)/recipes/screens/simple-text/simple-text"),
 	weather: () => import("../../app/(app)/recipes/screens/weather/weather"),
+	"weather-curve": () =>
+		import("../../app/(app)/recipes/screens/weather-curve/weather-curve"),
 	wikipedia: () =>
 		import("../../app/(app)/recipes/screens/wikipedia/wikipedia"),
 };
@@ -37,6 +39,7 @@ export const reactRecipeSlugs = [
 	"responsive-example",
 	"simple-text",
 	"weather",
+	"weather-curve",
 	"wikipedia",
 ] as const;
 

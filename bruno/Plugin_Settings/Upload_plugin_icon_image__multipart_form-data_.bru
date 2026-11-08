@@ -1,0 +1,15 @@
+meta {
+  name: Upload plugin icon image (multipart/form-data)
+  type: http
+  seq: 24
+}
+
+post {
+  url: {{base_url}}/api/plugin_settings/:id/image
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}

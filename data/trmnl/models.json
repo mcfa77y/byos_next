@@ -19,8 +19,9 @@
         "gray-4",
         "bw"
       ],
+      "default_palette_id": "gray-16",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": 750000,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -46,7 +47,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -73,6 +74,7 @@
       "palette_ids": [
         "bw"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -100,7 +102,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -127,8 +129,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -154,7 +157,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "0.8"
           ],
           [
@@ -181,8 +184,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -208,7 +212,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -235,8 +239,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -262,7 +267,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -278,8 +283,8 @@
       "description": "Inkplate 10",
       "width": 1200,
       "height": 825,
-      "colors": 8,
-      "bit_depth": 3,
+      "colors": 4,
+      "bit_depth": 2,
       "scale_factor": 1.5,
       "rotation": 0,
       "mime_type": "image/png",
@@ -290,8 +295,9 @@
         "bw",
         "gray-4"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -317,7 +323,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -344,8 +350,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -371,7 +378,62 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "playdate",
+      "label": "Playdate",
+      "description": "Playdate",
+      "width": 400,
+      "height": 240,
+      "colors": 2,
+      "bit_depth": 1,
+      "scale_factor": 1,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--playdate",
+          "size": "screen--md",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "400px"
+          ],
+          [
+            "--screen-h",
+            "240px"
+          ],
+          [
+            "--pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -400,8 +462,9 @@
         "color-7a",
         "color-6a"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "limited",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -427,7 +490,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -456,8 +519,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -483,7 +547,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -510,8 +574,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -537,7 +602,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -565,6 +630,7 @@
         "bw",
         "gray-4"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -592,7 +658,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -621,8 +687,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -648,7 +715,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -677,8 +744,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -704,7 +772,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -732,8 +800,9 @@
         "bw",
         "color-6a"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "limited",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -759,7 +828,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -788,8 +857,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -815,7 +885,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -842,8 +912,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -869,7 +940,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -897,6 +968,7 @@
         "bw",
         "gray-4"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -924,7 +996,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -952,6 +1024,7 @@
         "color-6a",
         "bw"
       ],
+      "default_palette_id": "color-6a",
       "preview_white_point": "limited",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -979,7 +1052,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1007,6 +1080,7 @@
         "bw",
         "gray-4"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -1034,7 +1108,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1061,6 +1135,7 @@
       "palette_ids": [
         "bw"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -1088,7 +1163,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1115,8 +1190,9 @@
       "palette_ids": [
         "color-24bit"
       ],
+      "default_palette_id": "color-24bit",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": false
     },
     {
@@ -1140,8 +1216,9 @@
         "gray-256",
         "color-24bit"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1167,7 +1244,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1194,8 +1271,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1221,7 +1299,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "0.8"
           ],
           [
@@ -1235,7 +1313,7 @@
       "name": "onyx_boox_go_7",
       "label": "Onyx BOOX Go 7",
       "description": "Onyx BOOX Go 7",
-      "width": 1880,
+      "width": 1680,
       "height": 1264,
       "colors": 16,
       "bit_depth": 4,
@@ -1250,8 +1328,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1262,7 +1341,7 @@
         "variables": [
           [
             "--screen-w",
-            "1044px"
+            "933px"
           ],
           [
             "--screen-h",
@@ -1277,7 +1356,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1306,8 +1385,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1333,7 +1413,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1360,6 +1440,7 @@
       "palette_ids": [
         "color-3bwr"
       ],
+      "default_palette_id": "color-3bwr",
       "preview_white_point": "limited",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -1387,7 +1468,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1414,6 +1495,7 @@
       "palette_ids": [
         "color-4bwry"
       ],
+      "default_palette_id": "color-4bwry",
       "preview_white_point": "limited",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -1441,7 +1523,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1472,8 +1554,9 @@
         "gray-256",
         "color-12bit"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "limited",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1499,7 +1582,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1526,6 +1609,7 @@
       "palette_ids": [
         "bw"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -1553,7 +1637,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1583,8 +1667,9 @@
         "gray-16",
         "gray-256"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1610,7 +1695,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1639,8 +1724,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1666,7 +1752,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1693,6 +1779,7 @@
       "palette_ids": [
         "color-4bwry"
       ],
+      "default_palette_id": "color-4bwry",
       "preview_white_point": "limited",
       "image_size_limit": 90000,
       "image_upload_supported": true,
@@ -1720,7 +1807,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1747,8 +1834,9 @@
       "palette_ids": [
         "gray-256"
       ],
+      "default_palette_id": "gray-256",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1774,7 +1862,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1790,8 +1878,8 @@
       "description": "Inkplate 5.2",
       "width": 1280,
       "height": 720,
-      "colors": 16,
-      "bit_depth": 4,
+      "colors": 4,
+      "bit_depth": 2,
       "scale_factor": 1.1996,
       "rotation": 0,
       "mime_type": "image/png",
@@ -1800,11 +1888,11 @@
       "kind": "byod",
       "palette_ids": [
         "bw",
-        "gray-4",
-        "gray-16"
+        "gray-4"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1830,7 +1918,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1857,8 +1945,9 @@
       "palette_ids": [
         "color-24bit"
       ],
+      "default_palette_id": "color-24bit",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1884,7 +1973,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1913,8 +2002,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1940,7 +2030,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -1969,8 +2059,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -1996,7 +2087,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2025,8 +2116,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2052,7 +2144,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2081,8 +2173,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2108,7 +2201,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2139,8 +2232,9 @@
         "gray-256",
         "color-24bit"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2166,7 +2260,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2195,8 +2289,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 512000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2222,7 +2317,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2250,8 +2345,9 @@
         "bw",
         "gray-4"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2277,7 +2373,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2306,8 +2402,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2333,7 +2430,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2349,8 +2446,8 @@
       "description": "Inkplate 6COLOR",
       "width": 600,
       "height": 448,
-      "colors": 8,
-      "bit_depth": 3,
+      "colors": 2,
+      "bit_depth": 1,
       "scale_factor": 0.75,
       "rotation": 0,
       "mime_type": "image/png",
@@ -2358,10 +2455,11 @@
       "offset_y": 0,
       "kind": "byod",
       "palette_ids": [
-        "color-7a"
+        "color-6a"
       ],
+      "default_palette_id": "color-6a",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2387,7 +2485,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2416,8 +2514,9 @@
         "gray-4",
         "bw"
       ],
+      "default_palette_id": "gray-16",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": 750000,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2443,7 +2542,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2471,8 +2570,9 @@
         "bw",
         "color-6a"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2498,7 +2598,7 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2527,8 +2627,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2554,7 +2655,7 @@
             "1.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
             "1.0"
           ],
           [
@@ -2583,8 +2684,9 @@
         "gray-4",
         "gray-16"
       ],
+      "default_palette_id": "bw",
       "preview_white_point": "true_white",
-      "image_size_limit": 90000,
+      "image_size_limit": null,
       "image_upload_supported": true,
       "css": {
         "classes": {
@@ -2610,7 +2712,656 @@
             "2.0"
           ],
           [
-            "--ui-scale",
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "meta_portal",
+      "label": "Meta Portal",
+      "description": "Meta Portal",
+      "width": 1280,
+      "height": 800,
+      "colors": 16777216,
+      "bit_depth": 24,
+      "scale_factor": 1.2308,
+      "rotation": 0,
+      "mime_type": "image/webp",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-16",
+        "color-24bit"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--meta_portal",
+          "size": "screen--lg",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "1040px"
+          ],
+          [
+            "--screen-h",
+            "650px"
+          ],
+          [
+            "--pixel-ratio",
+            "1.2308"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "byod_custom",
+      "label": "Custom Device",
+      "description": "Custom Device",
+      "width": 800,
+      "height": 480,
+      "colors": 2,
+      "bit_depth": 1,
+      "scale_factor": 1,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-4",
+        "gray-16",
+        "gray-256",
+        "color-3bwr",
+        "color-3bwy",
+        "color-4bwry",
+        "color-6a",
+        "color-7a",
+        "color-12bit",
+        "color-24bit"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--byod_custom",
+          "size": "screen--md",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "480px"
+          ],
+          [
+            "--pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "waveshare_5_8_bw",
+      "label": "Waveshare 5.83\" (Steam Machine)",
+      "description": "Waveshare 5.83\" (Steam Machine)",
+      "width": 648,
+      "height": 480,
+      "colors": 4,
+      "bit_depth": 2,
+      "scale_factor": 0.81,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-4"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--waveshare_5_8_bw",
+          "size": "screen--md",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "593px"
+          ],
+          [
+            "--pixel-ratio",
+            "0.81"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "inkplate_13_spectra",
+      "label": "Inkplate 13 Spectra",
+      "description": "Inkplate 13 Spectra",
+      "width": 1600,
+      "height": 1200,
+      "colors": 2,
+      "bit_depth": 1,
+      "scale_factor": 2,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "color-6a"
+      ],
+      "default_palette_id": "color-6a",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--inkplate_13_spectra",
+          "size": "screen--md",
+          "density": "screen--density-2x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "600px"
+          ],
+          [
+            "--pixel-ratio",
+            "2.0"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "2.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "tcl_nxtpaper_14",
+      "label": "TCL NxtPaper 14",
+      "description": "TCL NxtPaper 14",
+      "width": 2400,
+      "height": 1600,
+      "colors": 16777216,
+      "bit_depth": 24,
+      "scale_factor": 2.3077,
+      "rotation": 0,
+      "mime_type": "image/webp",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--tcl_nxtpaper_14",
+          "size": "screen--lg",
+          "density": "screen--density-2x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "1040px"
+          ],
+          [
+            "--screen-h",
+            "693px"
+          ],
+          [
+            "--pixel-ratio",
+            "2.3077"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "2.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "kobo_libra_color",
+      "label": "Kobo Libra Color",
+      "description": "Kobo Libra Color",
+      "width": 1680,
+      "height": 1264,
+      "colors": 4096,
+      "bit_depth": 12,
+      "scale_factor": 2.1,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-4",
+        "gray-16",
+        "color-12bit"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "limited",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--kobo_libra_color",
+          "size": "screen--md",
+          "density": "screen--density-2x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "602px"
+          ],
+          [
+            "--pixel-ratio",
+            "2.1"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "2.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "xteink_x3",
+      "label": "Xteink X3",
+      "description": "Xteink X3",
+      "width": 792,
+      "height": 528,
+      "colors": 4,
+      "bit_depth": 2,
+      "scale_factor": 0.99,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-4"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--xteink_x3",
+          "size": "screen--md",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "533px"
+          ],
+          [
+            "--pixel-ratio",
+            "0.99"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "seeed_sticky",
+      "label": "Seeed Sticky",
+      "description": "Seeed Sticky",
+      "width": 800,
+      "height": 480,
+      "colors": 4,
+      "bit_depth": 2,
+      "scale_factor": 1,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-4"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--seeed_sticky",
+          "size": "screen--md",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "480px"
+          ],
+          [
+            "--pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "onyx_boox_go_10_3_lumi",
+      "label": "Onyx BOOX Go 10.3 (Gen II) Lumi",
+      "description": "Onyx BOOX Go 10.3 (Gen II) Lumi",
+      "width": 2480,
+      "height": 1860,
+      "colors": 256,
+      "bit_depth": 8,
+      "scale_factor": 2.5,
+      "rotation": 90,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "gray-256"
+      ],
+      "default_palette_id": "gray-256",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--onyx_boox_go_10_3_lumi",
+          "size": "screen--lg",
+          "density": "screen--density-2x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "992px"
+          ],
+          [
+            "--screen-h",
+            "744px"
+          ],
+          [
+            "--pixel-ratio",
+            "2.5"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "2.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "vestaboard",
+      "label": "Vestaboard",
+      "description": "Vestaboard",
+      "width": 22,
+      "height": 6,
+      "colors": 16777216,
+      "bit_depth": 24,
+      "scale_factor": 1,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "vestaboard",
+      "palette_ids": [
+        "color-24bit"
+      ],
+      "default_palette_id": "color-24bit",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": false
+    },
+    {
+      "name": "kobo_clara_2e",
+      "label": "Kobo Clara 2E",
+      "description": "Kobo Clara 2E",
+      "width": 1072,
+      "height": 1448,
+      "colors": 16,
+      "bit_depth": 4,
+      "scale_factor": 1.34,
+      "rotation": 90,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "byod",
+      "palette_ids": [
+        "bw",
+        "gray-4",
+        "gray-16"
+      ],
+      "default_palette_id": "bw",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--kobo_clara_2e",
+          "size": "screen--md",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "800px"
+          ],
+          [
+            "--screen-h",
+            "1081px"
+          ],
+          [
+            "--pixel-ratio",
+            "1.34"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "joan_13",
+      "label": "Joan 13",
+      "description": "Joan 13",
+      "width": 1600,
+      "height": 1200,
+      "colors": 16,
+      "bit_depth": 4,
+      "scale_factor": 1.5385,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "joan",
+      "palette_ids": [
+        "gray-16",
+        "gray-4",
+        "bw"
+      ],
+      "default_palette_id": "gray-16",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--joan_13",
+          "size": "screen--lg",
+          "density": "screen--density-2x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "1040px"
+          ],
+          [
+            "--screen-h",
+            "780px"
+          ],
+          [
+            "--pixel-ratio",
+            "1.5385"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "2.0"
+          ],
+          [
+            "--device-ui-scale",
             "1.0"
           ],
           [

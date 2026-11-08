@@ -1,0 +1,15 @@
+meta {
+  name: Delete a plugin setting by ID or UUID
+  type: http
+  seq: 15
+}
+
+delete {
+  url: {{base_url}}/api/plugin_settings/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}

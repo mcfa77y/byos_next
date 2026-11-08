@@ -21,8 +21,22 @@ export function parseRequestHeaders(request: Request): RequestHeaders {
 	const widthStr = headers.get("Width");
 	const heightStr = headers.get("Height");
 
+	let apiKey =
+		headers.get("Access-Token") ||
+		headers.get("api_key") ||
+		headers.get("api-key");
+	if (!apiKey) {
+		try {
+			const url = new URL(request.url, "http://localhost");
+			apiKey =
+				url.searchParams.get("access_token") || url.searchParams.get("api_key");
+		} catch {
+			// ignore invalid URL
+		}
+	}
+
 	return {
-		apiKey: headers.get("Access-Token"),
+		apiKey,
 		macAddress: headers.get("ID")?.toUpperCase() || null,
 		refreshRate: headers.get("Refresh-Rate"),
 		batteryVoltage: headers.get("Battery-Voltage"),

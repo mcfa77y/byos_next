@@ -52,8 +52,7 @@ function RecoverPageContent() {
 		setIsLoading(true);
 
 		try {
-			// @ts-expect-error - forgetPassword method exists but types may not be updated
-			const { error: requestError } = await authClient.forgetPassword({
+			const { error: requestError } = await authClient.requestPasswordReset({
 				email,
 				redirectTo: `${window.location.origin}/recover`,
 			});

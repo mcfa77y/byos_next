@@ -179,7 +179,7 @@ export async function renderDeviceImage({
 	const { buffer, sizeLimitExceeded } = await encode(
 		quantized,
 		profile.model.mime_type,
-		profile.model.image_size_limit,
+		profile.model.image_size_limit ?? undefined,
 		{ paletteColorCount },
 	);
 

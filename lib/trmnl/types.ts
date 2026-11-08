@@ -30,7 +30,7 @@ export const trmnlModelSchema = z.object({
 	kind: z.string().optional(),
 	palette_ids: z.array(z.string()),
 	preview_white_point: z.string().optional(),
-	image_size_limit: z.number().optional(),
+	image_size_limit: z.number().nullish(),
 	image_upload_supported: z.boolean().optional(),
 	// `css` is nullable in the upstream API.
 	css: z

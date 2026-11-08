@@ -1,0 +1,856 @@
+/**
+ * OpenAPI 3.0.3 specification builder for BYOS Next.js (TRMNL API).
+ */
+export function buildOpenApiSpec(baseUrl = "http://192.168.4.66:3000") {
+	return {
+		openapi: "3.0.3",
+		info: {
+			title: "BYOS Next.js TRMNL API",
+			version: "0.2.15",
+			description:
+				"HTTP API for TRMNL e-ink devices, screen bitmap generation, device management, playlists, and TRMNL plugin proxy endpoints.",
+		},
+		servers: [
+			{
+				url: baseUrl,
+				description: "Local BYOS Server",
+			},
+		],
+		tags: [
+			{
+				name: "Device Firmware",
+				description: "Endpoints called directly by TRMNL / Inky Frame firmware",
+			},
+			{
+				name: "Bitmap Rendering",
+				description: "Screen and mixup image generation endpoints",
+			},
+			{
+				name: "Device Management",
+				description: "Device listing, sleep schedule, playlists, and user info",
+			},
+			{
+				name: "Plugin Settings",
+				description: "Custom plugin settings, merge variables, and markup",
+			},
+			{
+				name: "TRMNL Registry & Proxy",
+				description:
+					"Models, palettes, categories, server IPs, and Liquid markup rendering",
+			},
+			{
+				name: "Auth",
+				description: "Better Auth authentication routes",
+			},
+		],
+		components: {
+			securitySchemes: {
+				AccessTokenAuth: {
+					type: "apiKey",
+					in: "header",
+					name: "Access-Token",
+					description: "Device API key issued by /api/setup or Dashboard",
+				},
+				DeviceMacHeader: {
+					type: "apiKey",
+					in: "header",
+					name: "ID",
+					description: "Device MAC address (e.g. EE:4B:50:07:3F:74)",
+				},
+			},
+			parameters: {
+				DeviceIdHeader: {
+					name: "ID",
+					in: "header",
+					required: false,
+					description: "Device MAC address (e.g. EE:4B:50:07:3F:74)",
+					schema: { type: "string", example: "EE:4B:50:07:3F:74" },
+				},
+				AccessTokenHeader: {
+					name: "Access-Token",
+					in: "header",
+					required: true,
+					description: "Issued device API key",
+					schema: { type: "string", example: "9f2217ee9a24d01544d39849" },
+				},
+				RefreshRateHeader: {
+					name: "Refresh-Rate",
+					in: "header",
+					required: false,
+					description: "Current refresh interval in seconds reported by device",
+					schema: { type: "string", example: "180" },
+				},
+				BatteryVoltageHeader: {
+					name: "Battery-Voltage",
+					in: "header",
+					required: false,
+					description: "Battery voltage in volts",
+					schema: { type: "string", example: "4.12" },
+				},
+				FwVersionHeader: {
+					name: "FW-Version",
+					in: "header",
+					required: false,
+					description: "Device firmware version",
+					schema: { type: "string", example: "1.6.9" },
+				},
+				RssiHeader: {
+					name: "RSSI",
+					in: "header",
+					required: false,
+					description: "Wi-Fi signal strength in dBm",
+					schema: { type: "string", example: "-52" },
+				},
+				WidthHeader: {
+					name: "Width",
+					in: "header",
+					required: false,
+					description: "Display width override in pixels",
+					schema: { type: "integer", example: 800 },
+				},
+				HeightHeader: {
+					name: "Height",
+					in: "header",
+					required: false,
+					description: "Display height override in pixels",
+					schema: { type: "integer", example: 480 },
+				},
+				ModelHeader: {
+					name: "Model",
+					in: "header",
+					required: false,
+					description: "Device model identifier (e.g. inky_frame_7_3, og_plus)",
+					schema: { type: "string", example: "inky_frame_7_3" },
+				},
+			},
+		},
+		security: [{ AccessTokenAuth: [], DeviceMacHeader: [] }],
+		paths: {
+			"/api/setup": {
+				get: {
+					tags: ["Device Firmware"],
+					operationId: "setupDevice",
+					summary: "Register or provision a device by MAC address",
+					parameters: [
+						{
+							name: "ID",
+							in: "header",
+							required: true,
+							description: "Device MAC address",
+							schema: { type: "string", example: "EE:4B:50:07:3F:74" },
+						},
+						{
+							name: "Model",
+							in: "header",
+							required: true,
+							description: "TRMNL device model slug",
+							schema: { type: "string", example: "inky_frame_7_3" },
+						},
+						{
+							name: "Access-Token",
+							in: "header",
+							required: false,
+							description: "Optional existing API key to associate user",
+							schema: { type: "string", example: "9f2217ee9a24d01544d39849" },
+						},
+						{ $ref: "#/components/parameters/FwVersionHeader" },
+					],
+					responses: {
+						"200": {
+							description: "Device registered or existing credentials returned",
+						},
+						"400": {
+							description: "Missing ID or Model header",
+						},
+					},
+				},
+			},
+			"/api/display": {
+				get: {
+					tags: ["Device Firmware"],
+					operationId: "getDisplay",
+					summary:
+						"Fetch next screen, image URL, and refresh schedule for device",
+					security: [{ AccessTokenAuth: [], DeviceMacHeader: [] }],
+					parameters: [
+						{ $ref: "#/components/parameters/AccessTokenHeader" },
+						{ $ref: "#/components/parameters/DeviceIdHeader" },
+						{ $ref: "#/components/parameters/RefreshRateHeader" },
+						{ $ref: "#/components/parameters/BatteryVoltageHeader" },
+						{ $ref: "#/components/parameters/FwVersionHeader" },
+						{ $ref: "#/components/parameters/RssiHeader" },
+						{ $ref: "#/components/parameters/WidthHeader" },
+						{ $ref: "#/components/parameters/HeightHeader" },
+						{ $ref: "#/components/parameters/ModelHeader" },
+					],
+					responses: {
+						"200": {
+							description:
+								"Display payload (status 0 on success, 401 in payload if missing Access-Token)",
+						},
+					},
+				},
+			},
+			"/api/display/current": {
+				get: {
+					tags: ["Device Firmware"],
+					operationId: "getCurrentDisplay",
+					summary:
+						"Fetch current active screen for device without advancing playlist",
+					security: [{ AccessTokenAuth: [] }],
+					parameters: [
+						{ $ref: "#/components/parameters/AccessTokenHeader" },
+						{ $ref: "#/components/parameters/WidthHeader" },
+						{ $ref: "#/components/parameters/HeightHeader" },
+					],
+					responses: {
+						"200": { description: "Current screen payload" },
+						"401": { description: "Access-Token header is required" },
+						"404": { description: "Device not found" },
+					},
+				},
+			},
+			"/api/log": {
+				post: {
+					tags: ["Device Firmware"],
+					operationId: "postDeviceLog",
+					summary: "Submit device telemetry and error logs",
+					security: [{ AccessTokenAuth: [], DeviceMacHeader: [] }],
+					parameters: [
+						{ $ref: "#/components/parameters/AccessTokenHeader" },
+						{ $ref: "#/components/parameters/DeviceIdHeader" },
+						{ $ref: "#/components/parameters/RefreshRateHeader" },
+						{ $ref: "#/components/parameters/BatteryVoltageHeader" },
+						{ $ref: "#/components/parameters/FwVersionHeader" },
+						{ $ref: "#/components/parameters/RssiHeader" },
+					],
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									required: ["logs"],
+									properties: {
+										logs: {
+											type: "array",
+											items: {
+												type: "object",
+												properties: {
+													id: { type: "integer", example: 1 },
+													created_at: { type: "integer", example: 1730990000 },
+													message: {
+														type: "string",
+														example: "Display refresh completed",
+													},
+													source_line: { type: "integer", example: 42 },
+													source_path: { type: "string", example: "main.py" },
+													wifi_status: {
+														type: "string",
+														example: "connected",
+													},
+													wifi_signal: { type: "integer", example: -52 },
+													refresh_rate: { type: "integer", example: 30 },
+													sleep_duration: { type: "integer", example: 30 },
+													firmware_version: {
+														type: "string",
+														example: "1.6.9",
+													},
+													battery_voltage: { type: "number", example: 4.12 },
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Logs ingested" },
+						"401": { description: "Access-Token header is required" },
+						"422": { description: "Invalid request body" },
+					},
+				},
+			},
+			"/api/bitmap/{slug}": {
+				get: {
+					tags: ["Bitmap Rendering"],
+					operationId: "getRecipeBitmap",
+					summary: "Render a recipe screen bitmap (PNG/BMP/WebP)",
+					parameters: [
+						{
+							name: "slug",
+							in: "path",
+							required: true,
+							description:
+								"Recipe slug with extension (e.g. weather-curve.png)",
+							schema: { type: "string", example: "weather-curve.png" },
+						},
+						{
+							name: "width",
+							in: "query",
+							required: false,
+							schema: { type: "integer", example: 800 },
+						},
+						{
+							name: "height",
+							in: "query",
+							required: false,
+							schema: { type: "integer", example: 480 },
+						},
+						{
+							name: "model",
+							in: "query",
+							required: false,
+							schema: { type: "string", example: "inky_frame_7_3" },
+						},
+						{
+							name: "palette_id",
+							in: "query",
+							required: false,
+							schema: { type: "string", example: "color-7a" },
+						},
+					],
+					responses: {
+						"200": { description: "Rendered bitmap image binary" },
+					},
+				},
+			},
+			"/api/bitmap/mixup/{id}": {
+				get: {
+					tags: ["Bitmap Rendering"],
+					operationId: "getMixupBitmap",
+					summary: "Render a multi-slot mixup layout bitmap",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							description: "Mixup ID (e.g. 1.png)",
+							schema: { type: "string", example: "1.png" },
+						},
+						{
+							name: "width",
+							in: "query",
+							required: false,
+							schema: { type: "integer", example: 800 },
+						},
+						{
+							name: "height",
+							in: "query",
+							required: false,
+							schema: { type: "integer", example: 480 },
+						},
+					],
+					responses: {
+						"200": { description: "Rendered mixup bitmap binary" },
+					},
+				},
+			},
+			"/api/devices": {
+				get: {
+					tags: ["Device Management"],
+					operationId: "listDevices",
+					summary: "List all user devices",
+					responses: {
+						"200": { description: "Array of devices" },
+					},
+				},
+			},
+			"/api/devices/{id}": {
+				get: {
+					tags: ["Device Management"],
+					operationId: "getDeviceById",
+					summary: "Get device by numeric ID or friendly_id",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "INKY73" },
+						},
+					],
+					responses: {
+						"200": { description: "Device details" },
+						"404": { description: "Device not found" },
+					},
+				},
+				patch: {
+					tags: ["Device Management"],
+					operationId: "updateDeviceSleepMode",
+					summary: "Update device sleep mode settings",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "INKY73" },
+						},
+					],
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										sleep_mode_enabled: { type: "boolean", example: true },
+										sleep_start_time: {
+											type: "integer",
+											nullable: true,
+											example: 1380,
+										},
+										sleep_end_time: {
+											type: "integer",
+											nullable: true,
+											example: 420,
+										},
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Updated sleep mode state" },
+					},
+				},
+			},
+			"/api/playlists/items": {
+				get: {
+					tags: ["Device Management"],
+					operationId: "listPlaylistItems",
+					summary: "List all playlist items",
+					responses: {
+						"200": { description: "List of playlist items" },
+					},
+				},
+			},
+			"/api/playlists/items/{id}": {
+				patch: {
+					tags: ["Device Management"],
+					operationId: "updatePlaylistItem",
+					summary: "Update a playlist item",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									properties: {
+										visible: { type: "boolean", example: true },
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Updated playlist item" },
+					},
+				},
+			},
+			"/api/me": {
+				get: {
+					tags: ["Device Management"],
+					operationId: "getCurrentUser",
+					summary: "Get current authenticated user profile",
+					responses: {
+						"200": { description: "Current user profile" },
+					},
+				},
+			},
+			"/api/plugin_settings": {
+				get: {
+					tags: ["Plugin Settings"],
+					operationId: "listPluginSettings",
+					summary: "List plugin settings",
+					parameters: [
+						{
+							name: "plugin_id",
+							in: "query",
+							required: false,
+							schema: { type: "integer" },
+						},
+						{
+							name: "limit",
+							in: "query",
+							required: false,
+							schema: { type: "integer", example: 25 },
+						},
+						{
+							name: "offset",
+							in: "query",
+							required: false,
+							schema: { type: "integer", example: 0 },
+						},
+					],
+					responses: {
+						"200": { description: "Paginated plugin settings" },
+					},
+				},
+				post: {
+					tags: ["Plugin Settings"],
+					operationId: "createPluginSetting",
+					summary: "Create a new plugin setting",
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									required: ["name", "plugin_id"],
+									properties: {
+										name: { type: "string", example: "My Custom Plugin" },
+										plugin_id: { type: "integer", example: 100 },
+										strategy: { type: "string", example: "webhook" },
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Created plugin setting" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}": {
+				delete: {
+					tags: ["Plugin Settings"],
+					operationId: "deletePluginSetting",
+					summary: "Delete a plugin setting by ID or UUID",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					responses: {
+						"204": { description: "Deleted" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}/details": {
+				get: {
+					tags: ["Plugin Settings"],
+					operationId: "getPluginSettingDetails",
+					summary: "Get full details for a plugin setting",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					responses: {
+						"200": { description: "Plugin setting details" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}/data": {
+				get: {
+					tags: ["Plugin Settings"],
+					operationId: "getPluginSettingData",
+					summary: "Get merge_variables for a plugin setting",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					responses: {
+						"200": { description: "Plugin merge variables" },
+					},
+				},
+				post: {
+					tags: ["Plugin Settings"],
+					operationId: "updatePluginSettingData",
+					summary: "Replace merge_variables for a plugin setting",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									required: ["merge_variables"],
+									properties: {
+										merge_variables: {
+											type: "object",
+											example: {
+												headline: "Hello Inky Frame",
+												temperature: 72,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Updated merge variables" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}/settings": {
+				patch: {
+					tags: ["Plugin Settings"],
+					operationId: "patchPluginSettingFields",
+					summary: "Merge custom form fields into a plugin setting",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									required: ["fields"],
+									properties: {
+										fields: {
+											type: "object",
+											example: { api_endpoint: "https://example.com/feed" },
+										},
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Updated fields" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}/markup/{size}": {
+				get: {
+					tags: ["Plugin Settings"],
+					operationId: "getPluginSettingMarkup",
+					summary: "Get Liquid markup for a specific screen size",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+						{
+							name: "size",
+							in: "path",
+							required: true,
+							description:
+								"Markup size (full, half_horizontal, half_vertical, quadrant)",
+							schema: {
+								type: "string",
+								enum: ["full", "half_horizontal", "half_vertical", "quadrant"],
+								example: "full",
+							},
+						},
+					],
+					responses: {
+						"200": { description: "Plain text Liquid markup" },
+					},
+				},
+				put: {
+					tags: ["Plugin Settings"],
+					operationId: "putPluginSettingMarkup",
+					summary: "Update Liquid markup for a specific screen size",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+						{
+							name: "size",
+							in: "path",
+							required: true,
+							schema: {
+								type: "string",
+								enum: ["full", "half_horizontal", "half_vertical", "quadrant"],
+								example: "full",
+							},
+						},
+					],
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									required: ["content"],
+									properties: {
+										content: {
+											type: "string",
+											example: "<div class='layout'>{{ headline }}</div>",
+										},
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Markup updated" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}/archive": {
+				get: {
+					tags: ["Plugin Settings"],
+					operationId: "getPluginSettingArchive",
+					summary: "Download plugin setting YAML archive",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					responses: {
+						"200": { description: "YAML settings archive" },
+					},
+				},
+				post: {
+					tags: ["Plugin Settings"],
+					operationId: "uploadPluginSettingArchive",
+					summary: "Upload plugin setting YAML archive",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					responses: {
+						"200": { description: "Archive uploaded" },
+					},
+				},
+			},
+			"/api/plugin_settings/{id}/image": {
+				post: {
+					tags: ["Plugin Settings"],
+					operationId: "uploadPluginSettingImage",
+					summary: "Upload plugin icon image (multipart/form-data)",
+					parameters: [
+						{
+							name: "id",
+							in: "path",
+							required: true,
+							schema: { type: "string", example: "1" },
+						},
+					],
+					responses: {
+						"200": { description: "Icon uploaded as inline data URL" },
+					},
+				},
+			},
+			"/api/models": {
+				get: {
+					tags: ["TRMNL Registry & Proxy"],
+					operationId: "listModels",
+					summary: "List supported TRMNL and e-ink device models",
+					responses: {
+						"200": { description: "Device models list" },
+					},
+				},
+			},
+			"/api/palettes": {
+				get: {
+					tags: ["TRMNL Registry & Proxy"],
+					operationId: "listPalettes",
+					summary: "List color and grayscale e-ink palettes",
+					responses: {
+						"200": { description: "Color palettes list" },
+					},
+				},
+			},
+			"/api/categories": {
+				get: {
+					tags: ["TRMNL Registry & Proxy"],
+					operationId: "listCategories",
+					summary: "List plugin categories",
+					responses: {
+						"200": { description: "Categories list" },
+					},
+				},
+			},
+			"/api/ips": {
+				get: {
+					tags: ["TRMNL Registry & Proxy"],
+					operationId: "listIps",
+					summary: "List TRMNL server IP addresses",
+					responses: {
+						"200": { description: "IPv4 and IPv6 lists" },
+					},
+				},
+			},
+			"/api/markup": {
+				post: {
+					tags: ["TRMNL Registry & Proxy"],
+					operationId: "renderLiquidMarkup",
+					summary: "Render a Liquid template with variables",
+					requestBody: {
+						required: true,
+						content: {
+							"application/json": {
+								schema: {
+									type: "object",
+									required: ["markup"],
+									properties: {
+										markup: {
+											type: "string",
+											example: "<h1>Hello {{ name }}</h1>",
+										},
+										variables: {
+											type: "object",
+											example: { name: "Inky Frame 7.3" },
+										},
+									},
+								},
+							},
+						},
+					},
+					responses: {
+						"200": { description: "Rendered HTML in data field" },
+					},
+				},
+			},
+			"/api/auth/get-session": {
+				get: {
+					tags: ["Auth"],
+					operationId: "getAuthSession",
+					summary: "Get current Better Auth session",
+					responses: {
+						"200": { description: "Session state" },
+					},
+				},
+			},
+		},
+	};
+}

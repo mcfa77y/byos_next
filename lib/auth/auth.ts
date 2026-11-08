@@ -54,6 +54,10 @@ function createAuth() {
 
 	return betterAuth({
 		baseURL: getAppBaseUrl().origin,
+		trustedOrigins:
+			process.env.NODE_ENV === "development"
+				? ["http://localhost:*", "http://127.0.0.1:*"]
+				: undefined,
 		database: pool,
 		emailAndPassword: {
 			enabled: true,

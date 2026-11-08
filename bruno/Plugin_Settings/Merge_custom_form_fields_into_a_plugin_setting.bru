@@ -1,0 +1,23 @@
+meta {
+  name: Merge custom form fields into a plugin setting
+  type: http
+  seq: 19
+}
+
+patch {
+  url: {{base_url}}/api/plugin_settings/:id/settings
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "fields": {
+      "api_endpoint": "https://example.com/feed"
+    }
+  }
+}

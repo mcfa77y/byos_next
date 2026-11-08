@@ -1,0 +1,15 @@
+meta {
+  name: Get merge_variables for a plugin setting
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{base_url}}/api/plugin_settings/:id/data
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}

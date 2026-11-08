@@ -1,0 +1,11 @@
+meta {
+  name: List all playlist items
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_url}}/api/playlists/items
+  body: none
+  auth: inherit
+}

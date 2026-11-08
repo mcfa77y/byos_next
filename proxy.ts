@@ -10,6 +10,7 @@ const PUBLIC_API_PATHS = [
 	"/api/ips",
 	"/api/log",
 	"/api/models",
+	"/api/openapi.json",
 	"/api/palettes",
 	"/api/setup",
 ];

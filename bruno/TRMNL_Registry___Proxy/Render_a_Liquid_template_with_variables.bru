@@ -1,0 +1,20 @@
+meta {
+  name: Render a Liquid template with variables
+  type: http
+  seq: 29
+}
+
+post {
+  url: {{base_url}}/api/markup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "markup": "<h1>Hello {{ name }}</h1>",
+    "variables": {
+      "name": "Inky Frame 7.3"
+    }
+  }
+}

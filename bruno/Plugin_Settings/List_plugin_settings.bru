@@ -1,0 +1,17 @@
+meta {
+  name: List plugin settings
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{base_url}}/api/plugin_settings
+  body: none
+  auth: inherit
+}
+
+params:query {
+  plugin_id: 
+  limit: 25
+  offset: 0
+}

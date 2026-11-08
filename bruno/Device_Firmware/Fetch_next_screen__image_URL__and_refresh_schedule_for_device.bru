@@ -1,0 +1,11 @@
+meta {
+  name: Fetch next screen, image URL, and refresh schedule for device
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/display
+  body: none
+  auth: inherit
+}

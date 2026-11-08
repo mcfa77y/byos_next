@@ -1,0 +1,11 @@
+meta {
+  name: List all user devices
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/api/devices
+  body: none
+  auth: inherit
+}

@@ -1,0 +1,17 @@
+meta {
+  name: Submit device telemetry and error logs
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/log
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "logs": []
+  }
+}

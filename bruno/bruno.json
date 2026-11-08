@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "BYOS Next.js TRMNL API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -1,0 +1,11 @@
+meta {
+  name: Get current Better Auth session
+  type: http
+  seq: 30
+}
+
+get {
+  url: {{base_url}}/api/auth/get-session
+  body: none
+  auth: inherit
+}

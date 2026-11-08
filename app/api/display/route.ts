@@ -161,13 +161,15 @@ export async function GET(request: Request) {
 
 			case DeviceDisplayMode.MIXUP:
 				if (device.mixup_id) {
+					const mixupParams = new URLSearchParams(selection.baseQueryParams);
+					if (headers.apiKey && !mixupParams.has("access_token")) {
+						mixupParams.set("access_token", headers.apiKey);
+					}
 					imageUrl = buildDeviceImageUrl({
 						baseUrl,
 						imagePath: `mixup/${device.mixup_id}`,
 						profile: selection.profile,
-						query: `${selection.baseQueryParams}&access_token=${encodeURIComponent(
-							headers.apiKey,
-						)}`,
+						query: mixupParams.toString(),
 					});
 					logInfo("Using mixup display mode", {
 						source: "api/display",

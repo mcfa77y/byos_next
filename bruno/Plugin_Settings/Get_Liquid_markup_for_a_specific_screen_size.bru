@@ -1,0 +1,16 @@
+meta {
+  name: Get Liquid markup for a specific screen size
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{base_url}}/api/plugin_settings/:id/markup/:size
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+  size: full
+}

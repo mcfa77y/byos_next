@@ -61,12 +61,30 @@ export function parseRegistryList<S extends z.ZodType>(
 	return items;
 }
 
+// Local-only model overrides live in data/trmnl/models.local.json. Unlike
+// <resource>.json snapshots, this file is never rewritten by upstream refreshes
+// and is read on every call, so edits take effect without a restart. Entries
+// replace upstream models of the same name.
+async function readLocalModels(): Promise<TrmnlModel[]> {
+	try {
+		const file = path.join(DATA_DIR, "models.local.json");
+		const raw = await fs.readFile(file, "utf8");
+		return parseRegistryList("models", trmnlModelSchema, JSON.parse(raw));
+	} catch {
+		return [];
+	}
+}
+
 export async function listModels(): Promise<TrmnlModel[]> {
-	return parseRegistryList(
+	const upstream = parseRegistryList(
 		"models",
 		trmnlModelSchema,
 		await getRegistry("models"),
 	);
+	const local = await readLocalModels();
+	if (local.length === 0) return upstream;
+	const localNames = new Set(local.map((m) => m.name));
+	return [...local, ...upstream.filter((m) => !localNames.has(m.name))];
 }
 
 export async function listPalettes(): Promise<TrmnlPalette[]> {

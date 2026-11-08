@@ -1,0 +1,24 @@
+meta {
+  name: Replace merge_variables for a plugin setting
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{base_url}}/api/plugin_settings/:id/data
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "merge_variables": {
+      "headline": "Hello Inky Frame",
+      "temperature": 72
+    }
+  }
+}

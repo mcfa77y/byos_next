@@ -1,0 +1,22 @@
+meta {
+  name: Render a recipe screen bitmap (PNG/BMP/WebP)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/bitmap/:slug
+  body: none
+  auth: inherit
+}
+
+params:query {
+  width: 800
+  height: 480
+  model: inky_frame_7_3
+  palette_id: color-7a
+}
+
+params:path {
+  slug: weather-curve.png
+}

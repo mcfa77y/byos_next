@@ -11,8 +11,13 @@ import {
 } from "@/lib/device/request-headers";
 import { selectDisplayForDevice } from "@/lib/display/select";
 import { logError, logInfo } from "@/lib/logger";
-import { buildDeviceImageFilename } from "@/lib/render/device-image-url";
+import { DeviceDisplayMode } from "@/lib/mixup/constants";
+import {
+	buildDeviceImageFilename,
+	buildDeviceImageUrl,
+} from "@/lib/render/device-image-url";
 import type { Device } from "@/lib/types";
+import { getActivePlaylistItem } from "../utils";
 
 /**
  * GET /api/display/current
@@ -65,35 +70,72 @@ export async function GET(request: Request) {
 				{ status: 404 },
 			);
 		}
-
 		const deviceData = device as unknown as Device;
-		const selection = await selectDisplayForDevice(deviceData, {
-			hostUrl: headers.hostUrl,
-			width: headers.width,
-			height: headers.height,
-		});
-
+		let screenToDisplay = deviceData.screen;
 		const refreshSchedule = normalizeRefreshSchedule(
 			deviceData.refresh_schedule,
 		);
-		const refreshRate =
+		let dynamicRefreshRate =
 			refreshSchedule?.default_refresh_rate || DISPLAY_FALLBACK_REFRESH_SECONDS;
+
+		if (
+			deviceData.display_mode === DeviceDisplayMode.PLAYLIST &&
+			deviceData.playlist_id
+		) {
+			const activeItem = await getActivePlaylistItem(
+				deviceData.playlist_id,
+				deviceData.current_playlist_index || 0,
+				deviceData.timezone || "UTC",
+			);
+			if (activeItem) {
+				screenToDisplay = activeItem.screen_id;
+				dynamicRefreshRate = activeItem.duration;
+			}
+		}
+
+		const selection = await selectDisplayForDevice(
+			{
+				...deviceData,
+				screen: screenToDisplay,
+			},
+			{
+				hostUrl: headers.hostUrl,
+				width: headers.width,
+				height: headers.height,
+			},
+		);
+
+		let imageUrl = selection.imageUrl;
+		if (
+			deviceData.display_mode === DeviceDisplayMode.MIXUP &&
+			deviceData.mixup_id
+		) {
+			const mixupParams = new URLSearchParams(selection.baseQueryParams);
+			if (headers.apiKey && !mixupParams.has("access_token")) {
+				mixupParams.set("access_token", headers.apiKey);
+			}
+			imageUrl = buildDeviceImageUrl({
+				baseUrl: headers.hostUrl,
+				imagePath: `mixup/${deviceData.mixup_id}`,
+				profile: selection.profile,
+				query: mixupParams.toString(),
+			});
+		}
 
 		logInfo("Current display request successful", {
 			source: "api/display/current",
 			metadata: {
 				deviceId: deviceData.friendly_id,
-				screen: selection.screen,
+				screen: screenToDisplay,
 			},
 		});
-
 		return NextResponse.json(
 			{
 				status: 200,
-				refresh_rate: refreshRate,
-				image_url: selection.imageUrl,
+				refresh_rate: dynamicRefreshRate,
+				image_url: imageUrl,
 				filename: buildDeviceImageFilename(
-					selection.screen,
+					screenToDisplay ?? "current",
 					"current",
 					selection.profile,
 				),

@@ -1,0 +1,15 @@
+meta {
+  name: Get full details for a plugin setting
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{base_url}}/api/plugin_settings/:id/details
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 1
+}

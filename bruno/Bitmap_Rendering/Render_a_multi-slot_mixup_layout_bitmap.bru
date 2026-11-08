@@ -1,0 +1,20 @@
+meta {
+  name: Render a multi-slot mixup layout bitmap
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/api/bitmap/mixup/:id
+  body: none
+  auth: inherit
+}
+
+params:query {
+  width: 800
+  height: 480
+}
+
+params:path {
+  id: 1.png
+}
