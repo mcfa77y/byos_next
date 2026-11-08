@@ -11,6 +11,14 @@ import {
 	type View,
 } from "./primitives";
 
+const ROW_DAYS_START_INDEX = 1;
+const ROW_DAYS_END_INDEX = 7;
+const BAR_CHART_START_X = 204;
+const BAR_CHART_WIDTH = 132;
+const BAR_CHART_END_X = 336;
+const BAR_CHART_STEP_X = 4;
+const RAIN_DROP_FILLED_THRESHOLD = 50;
+
 const sign = (value: number) => (value < 0 ? -1 : 1);
 
 const edgeSlope = (
@@ -328,12 +336,13 @@ export function dayRows(
 	view: View,
 ): ReactElement[] {
 	const { rect, txt } = view;
-	const rows = view.days.slice(1, 7);
+	const rows = view.days.slice(ROW_DAYS_START_INDEX, ROW_DAYS_END_INDEX);
 	if (!rows.length) return [];
 	const minLow = Math.min(...rows.map((day) => day.low ?? 0));
 	const maxHigh = Math.max(...rows.map((day) => day.high ?? 0));
 	const tempToBarX = (temp: number) =>
-		204 + ((temp - minLow) * 132) / (maxHigh - minLow || 1);
+		BAR_CHART_START_X +
+		((temp - minLow) * BAR_CHART_WIDTH) / (maxHigh - minLow || 1);
 	const out: ReactElement[] = [];
 	rows.forEach((day, index) => {
 		const baselineY = firstBaselineY + rowPitch * index;
@@ -343,7 +352,12 @@ export function dayRows(
 		);
 		if (hasRain(day)) {
 			out.push(
-				drop(114.5, baselineY - 5.5, 9.6, (day.rain ?? 0) >= 50),
+				drop(
+					114.5,
+					baselineY - 5.5,
+					9.6,
+					(day.rain ?? 0) >= RAIN_DROP_FILLED_THRESHOLD,
+				),
 				txt(124, baselineY, `${day.rain}%`, { size: 14, weight: 500 }),
 			);
 		}
@@ -354,7 +368,13 @@ export function dayRows(
 				anchor: "end",
 			}),
 		);
-		for (let x = 204; x < 336; x += 4) out.push(rect(x, baselineY - 7, 1, 2));
+		for (
+			let x = BAR_CHART_START_X;
+			x < BAR_CHART_END_X;
+			x += BAR_CHART_STEP_X
+		) {
+			out.push(rect(x, baselineY - 7, 1, 2));
+		}
 		out.push(
 			rect(
 				tempToBarX(day.low ?? 0),

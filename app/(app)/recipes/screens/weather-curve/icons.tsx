@@ -294,6 +294,12 @@ export function icon(
 	);
 }
 
+const DROP_WIDTH_TO_HEIGHT_RATIO = 0.735;
+const DROP_STROKE_WIDTH_FACTOR = 0.11;
+const DROP_TOP_CONTROL_X_FACTOR = 0.12;
+const DROP_TOP_CONTROL_Y_FACTOR = 0.22;
+const DROP_BOTTOM_CONTROL_OFFSET_FACTOR = 0.9;
+
 /** Rain drop: filled from 50% chance of rain, outlined below. */
 export function drop(
 	centerX: number,
@@ -301,14 +307,19 @@ export function drop(
 	height: number,
 	filled: boolean,
 ) {
-	const width = height * 0.735;
+	const width = height * DROP_WIDTH_TO_HEIGHT_RATIO;
 	const topY = centerY - height / 2;
 	const bottomRadius = width / 2;
 	const bottomCenterY = centerY + height / 2 - bottomRadius;
+	const controlPointOffsetY =
+		bottomCenterY - bottomRadius * DROP_BOTTOM_CONTROL_OFFSET_FACTOR;
+	const controlPointOffsetX = width * DROP_TOP_CONTROL_X_FACTOR;
+	const controlPointTopY = topY + height * DROP_TOP_CONTROL_Y_FACTOR;
+
 	const pathData =
-		`M${centerX} ${topY}C${centerX + width * 0.12} ${topY + height * 0.22} ${centerX + bottomRadius} ${bottomCenterY - bottomRadius * 0.9} ` +
+		`M${centerX} ${topY}C${centerX + controlPointOffsetX} ${controlPointTopY} ${centerX + bottomRadius} ${controlPointOffsetY} ` +
 		`${centerX + bottomRadius} ${bottomCenterY}A${bottomRadius} ${bottomRadius} 0 0 1 ${centerX - bottomRadius} ${bottomCenterY}` +
-		`C${centerX - bottomRadius} ${bottomCenterY - bottomRadius * 0.9} ${centerX - width * 0.12} ${topY + height * 0.22} ${centerX} ${topY}Z`;
+		`C${centerX - bottomRadius} ${controlPointOffsetY} ${centerX - controlPointOffsetX} ${controlPointTopY} ${centerX} ${topY}Z`;
 	return filled ? (
 		<path key={`drop-${centerX}-${centerY}`} d={pathData} fill={INK} />
 	) : (
@@ -317,7 +328,7 @@ export function drop(
 			d={pathData}
 			fill="none"
 			stroke={INK}
-			strokeWidth={height * 0.11}
+			strokeWidth={height * DROP_STROKE_WIDTH_FACTOR}
 		/>
 	);
 }

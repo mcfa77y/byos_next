@@ -52,9 +52,29 @@ export interface HourlyRow {
 	prob: number | null;
 }
 
-const DAYS = 7;
+const FORECAST_DAYS_TARGET = 7;
 const DAY_HOURS = new Set([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
-const SEVERE = ["thunderstorm", "hail", "snow", "sleet"];
+const SEVERE_WEATHER_ICONS = ["thunderstorm", "hail", "snow", "sleet"];
+const SEVERE_OCCURRENCE_THRESHOLD = 2;
+const RAIN_OCCURRENCE_THRESHOLD = 4;
+const WET_HOUR_THRESHOLD_COUNT = 2;
+const MIN_PRECIPITATION_AMOUNT = 0.1;
+const MIN_HOURS_PER_DAY = 12;
+
+const DEFAULT_WEATHER_ICON = "cloudy";
+const RAIN_ICON = "rain";
+const PARTLY_CLOUDY_RAIN_ICON = "partly-cloudy-rain";
+const CLEAR_DAY_ICON = "clear-day";
+const PARTLY_CLOUDY_DAY_ICON = "partly-cloudy-day";
+
+const SECONDS_PER_HOUR = 3600;
+const SECONDS_PER_MINUTE = 60;
+const TIME_STRING_LENGTH_MINUTES = 16;
+const TIME_STRING_LENGTH_HOURS = 13;
+const ISO_DATETIME_LENGTH_SECONDS = 19;
+const ISO_DATE_LENGTH = 10;
+const DAYS_PER_WEEK = 7;
+const MONDAY_INDEX_OFFSET = 6;
 
 const WMO_ICONS: Record<number, string> = {
 	0: "clear",
@@ -110,19 +130,21 @@ export function dayIcon(
 	const icons = hours
 		.map((hour) => (hour.icon || "").replace("-night", "-day"))
 		.filter(Boolean);
-	if (!icons.length) return "cloudy";
+	if (!icons.length) return DEFAULT_WEATHER_ICON;
 
 	const counts: Record<string, number> = {};
 	for (const iconName of icons) {
 		counts[iconName] = (counts[iconName] || 0) + 1;
 	}
 
-	for (const severeIcon of SEVERE) {
-		if ((counts[severeIcon] || 0) >= 2) return severeIcon;
+	for (const severeIcon of SEVERE_WEATHER_ICONS) {
+		if ((counts[severeIcon] || 0) >= SEVERE_OCCURRENCE_THRESHOLD) {
+			return severeIcon;
+		}
 	}
-	if ((counts.rain || 0) >= 4) return "rain";
+	if ((counts.rain || 0) >= RAIN_OCCURRENCE_THRESHOLD) return RAIN_ICON;
 
-	let baseIcon = "cloudy";
+	let baseIcon = DEFAULT_WEATHER_ICON;
 	let maxCount = -1;
 	for (const [iconName, count] of Object.entries(counts)) {
 		if (count > maxCount) {
@@ -132,12 +154,12 @@ export function dayIcon(
 	}
 
 	const wetHours = hours.filter(
-		(hour) => (hour.precipitation || 0) >= 0.1,
+		(hour) => (hour.precipitation || 0) >= MIN_PRECIPITATION_AMOUNT,
 	).length;
-	if (wetHours >= 2) {
-		return baseIcon === "partly-cloudy-day" || baseIcon === "clear-day"
-			? "partly-cloudy-rain"
-			: "rain";
+	if (wetHours >= WET_HOUR_THRESHOLD_COUNT) {
+		return baseIcon === PARTLY_CLOUDY_DAY_ICON || baseIcon === CLEAR_DAY_ICON
+			? PARTLY_CLOUDY_RAIN_ICON
+			: RAIN_ICON;
 	}
 	return baseIcon;
 }
@@ -166,7 +188,9 @@ const pad = (n: number) => String(n).padStart(2, "0");
 function formatZoneOffset(offsetSeconds: number): string {
 	const sign = offsetSeconds >= 0 ? "+" : "-";
 	const abs = Math.abs(offsetSeconds);
-	return `${sign}${pad(Math.floor(abs / 3600))}:${pad(Math.floor((abs % 3600) / 60))}`;
+	const hours = Math.floor(abs / SECONDS_PER_HOUR);
+	const minutes = Math.floor((abs % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+	return `${sign}${pad(hours)}:${pad(minutes)}`;
 }
 
 export function parseCurrent(
@@ -177,16 +201,18 @@ export function parseCurrent(
 	const current = input?.current;
 	if (current?.time) {
 		let timeStr = current.time;
-		if (timeStr.length === 16) {
+		if (timeStr.length === TIME_STRING_LENGTH_MINUTES) {
 			timeStr = `${timeStr}:00`;
-		} else if (timeStr.length === 13) {
+		} else if (timeStr.length === TIME_STRING_LENGTH_HOURS) {
 			timeStr = `${timeStr}:00:00`;
 		}
 		const hasZone = /(?:[+-]\d\d:?\d\d|Z)$/i.test(timeStr);
 		return {
 			temp: rnd1(current.temperature_2m),
 			icon: wmoIcon(current.weather_code, (current.is_day ?? 1) !== 0),
-			updated: hasZone ? timeStr : `${timeStr.slice(0, 19)}${zone}`,
+			updated: hasZone
+				? timeStr
+				: `${timeStr.slice(0, ISO_DATETIME_LENGTH_SECONDS)}${zone}`,
 		};
 	}
 	if (firstRow) {
@@ -211,7 +237,7 @@ function buildDay(
 		.map((row) => row.prob)
 		.filter((prob): prob is number => prob != null);
 	const dayDate = new Date(`${dateStr}T12:00:00Z`);
-	const weekday = (dayDate.getUTCDay() + 6) % 7;
+	const weekday = (dayDate.getUTCDay() + MONDAY_INDEX_OFFSET) % DAYS_PER_WEEK;
 
 	const daytimeHours = dayRows.filter((row) => {
 		const hour = Number.parseInt(row.t.toISOString().slice(11, 13), 10);
@@ -262,27 +288,28 @@ export function transformOpenMeteo(input: OpenMeteoInput): WeatherCurveData {
 	const now = parseCurrent(input, zone, rows[0]);
 	const uvMap = parseUvMap(input?.daily);
 	const byDate = groupByDate(rows);
-
 	const fullDates = Array.from(byDate.keys())
-		.filter((dateKey) => (byDate.get(dateKey)?.length || 0) >= 12)
+		.filter(
+			(dateKey) => (byDate.get(dateKey)?.length || 0) >= MIN_HOURS_PER_DAY,
+		)
 		.toSorted((a, b) => a.localeCompare(b));
 	const todayStr = input?.current?.time
-		? input.current.time.slice(0, 10)
+		? input.current.time.slice(0, ISO_DATE_LENGTH)
 		: fullDates[0];
 	const ahead = fullDates.filter((dateKey) => dateKey >= todayStr);
-	const dates = ahead.length >= DAYS ? ahead : fullDates;
+	const dates = ahead.length >= FORECAST_DAYS_TARGET ? ahead : fullDates;
 
 	const days: WeatherDay[] = [];
 	for (const dateStr of dates) {
 		days.push(buildDay(dateStr, byDate.get(dateStr) || [], uvMap[dateStr]));
-		if (days.length === DAYS) break;
+		if (days.length === FORECAST_DAYS_TARGET) break;
 	}
 
 	return {
 		days,
 		now: {
 			temp: now ? now.temp : null,
-			icon: now ? now.icon : "cloudy",
+			icon: now ? now.icon : DEFAULT_WEATHER_ICON,
 		},
 		station: "",
 		source: "open-meteo",

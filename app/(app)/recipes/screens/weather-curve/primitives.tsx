@@ -11,36 +11,46 @@ export const GRAY = "#aaa";
 export const PAPER = "#fff";
 export const INK = "#000";
 
-const WIDE = 0.62;
-const MED = 0.55;
-const NARROW = 0.33;
+const CHAR_WIDTH_EXTRA_WIDE = 0.82;
+const CHAR_WIDTH_WIDE = 0.62;
+const CHAR_WIDTH_MEDIUM = 0.55;
+const CHAR_WIDTH_DIGIT = 0.57;
+const CHAR_WIDTH_NARROW = 0.33;
+const CHAR_WIDTH_FALLBACK = 0.45;
+
+const BOLD_WEIGHT_THRESHOLD = 600;
+const BOLD_WIDTH_FACTOR = 1.02;
+const DEFAULT_FONT_WEIGHT = 400;
 
 function getCharWidth(char: string): number {
-	if ("MW@#%&".includes(char)) return 0.82;
-	if (/[A-Z]/.test(char)) return WIDE;
-	if ("m w".includes(char)) return 0.82;
-	if (/[a-z]/.test(char)) return MED;
-	if (/\d/.test(char)) return 0.57;
-	if ("iltfj.,'()°".includes(char)) return NARROW;
-	return 0.45; // spaces, punctuation, fallback
+	if ("MW@#%&".includes(char)) return CHAR_WIDTH_EXTRA_WIDE;
+	if (/[A-Z]/.test(char)) return CHAR_WIDTH_WIDE;
+	if ("m w".includes(char)) return CHAR_WIDTH_EXTRA_WIDE;
+	if (/[a-z]/.test(char)) return CHAR_WIDTH_MEDIUM;
+	if (/\d/.test(char)) return CHAR_WIDTH_DIGIT;
+	if ("iltfj.,'()°".includes(char)) return CHAR_WIDTH_NARROW;
+	return CHAR_WIDTH_FALLBACK; // spaces, punctuation, fallback
 }
-
 /** Approximate advance width of `text` rendered at `size` px in Inter. */
 export function estimateTextWidth(
 	text: string,
 	size: number,
-	weight = 400,
+	weight = DEFAULT_FONT_WEIGHT,
 ): number {
 	let totalWidth = 0;
 	for (const char of text) totalWidth += getCharWidth(char);
-	return totalWidth * size * (weight >= 600 ? 1.02 : 1);
+	return (
+		totalWidth *
+		size *
+		(weight >= BOLD_WEIGHT_THRESHOLD ? BOLD_WIDTH_FACTOR : 1)
+	);
 }
 
 export function trimToFit(
 	text: string,
 	maxWidth: number,
 	size: number,
-	weight = 400,
+	weight = DEFAULT_FONT_WEIGHT,
 ) {
 	if (estimateTextWidth(text, size, weight) <= maxWidth) return text;
 	let trimmed = text;
@@ -55,7 +65,8 @@ export function trimToFit(
 
 export const formatDegrees = (temp: number | null) =>
 	temp == null ? "–" : `${temp}°`;
-
+const BIG_TEMP_LETTER_SPACING_FACTOR = -0.04;
+const BIG_TEMP_FONT_WEIGHT = 500;
 // Neither takumi nor satori draws SVG <text> (takumi drops it, satori throws),
 // and CSS transforms aren't reliable either — so text renders as absolutely
 // positioned HTML in canvas units, computed directly from the design's
@@ -114,7 +125,11 @@ export function createPrimitives(
 	): ReactElement {
 		const scaledFontSize = options.size * scale;
 		const scaledTextWidth =
-			estimateTextWidth(content, options.size, options.weight || 400) * scale;
+			estimateTextWidth(
+				content,
+				options.size,
+				options.weight || DEFAULT_FONT_WEIGHT,
+			) * scale;
 		let anchorOffset = 0;
 		if (options.anchor === "end") {
 			anchorOffset = scaledTextWidth;
@@ -133,7 +148,7 @@ export function createPrimitives(
 					left,
 					top: offsetY + (y - ASCENT * options.size) * scale,
 					fontSize: scaledFontSize,
-					fontWeight: options.weight || 400,
+					fontWeight: options.weight || DEFAULT_FONT_WEIGHT,
 					color: options.fill || INK,
 					// letterSpacing omitted: takumi's parser rejects negative values.
 					lineHeight: 1,
@@ -154,23 +169,24 @@ export function createPrimitives(
 		currentTemp: number | null,
 	) {
 		const tempText = formatDegrees(currentTemp);
+		const letterSpacing = BIG_TEMP_LETTER_SPACING_FACTOR * size;
 		const estimatedWidth =
-			estimateTextWidth(tempText, size, 500) - 0.04 * size * tempText.length;
+			estimateTextWidth(tempText, size, BIG_TEMP_FONT_WEIGHT) +
+			letterSpacing * tempText.length;
 		if (x + estimatedWidth <= maxRight) {
 			return txt(x, y, tempText, {
 				size,
-				weight: 500,
-				letterSpacing: -0.04 * size,
+				weight: BIG_TEMP_FONT_WEIGHT,
+				letterSpacing,
 			});
 		}
 		const scaledSize = (size * (maxRight - x)) / estimatedWidth;
 		return txt(x, y, tempText, {
 			size: scaledSize,
-			weight: 500,
-			letterSpacing: -0.04 * scaledSize,
+			weight: BIG_TEMP_FONT_WEIGHT,
+			letterSpacing: BIG_TEMP_LETTER_SPACING_FACTOR * scaledSize,
 		});
 	}
-
 	return { nextKey, rect, txt, bigTemp };
 }
 

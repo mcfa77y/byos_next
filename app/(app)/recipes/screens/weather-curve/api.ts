@@ -19,13 +19,35 @@ interface GeocodingResponse {
 	}>;
 }
 
+const GEOCODING_API_BASE_URL = "https://geocoding-api.open-meteo.com/v1/search";
+const FORECAST_API_BASE_URL = "https://api.open-meteo.com/v1/forecast";
+const DEFAULT_GEOCODE_COUNT = "1";
+const DEFAULT_LANGUAGE = "en";
+const JSON_FORMAT = "json";
+const JSON_ACCEPT_HEADERS = { Accept: "application/json" };
+const NO_STORE_CACHE_OPTION = { revalidate: 0 };
+const FORECAST_DAYS_COUNT = "8";
+const DEFAULT_TIMEZONE = "auto";
+const CURRENT_WEATHER_FIELDS = "temperature_2m,weather_code,is_day";
+const HOURLY_WEATHER_FIELDS =
+	"temperature_2m,precipitation_probability,precipitation,weather_code,is_day";
+const DAILY_WEATHER_FIELDS = "uv_index_max";
+const DEFAULT_FALLBACK_ICON = "cloudy";
+const DEFAULT_WEATHER_SOURCE = "open-meteo";
+
 export async function geocodeLocation(
 	locationName: string,
 ): Promise<{ latitude: number; longitude: number; name: string } | null> {
 	try {
+		const searchParams = new URLSearchParams({
+			name: locationName,
+			count: DEFAULT_GEOCODE_COUNT,
+			language: DEFAULT_LANGUAGE,
+			format: JSON_FORMAT,
+		});
 		const response = await fetch(
-			`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=en&format=json`,
-			{ headers: { Accept: "application/json" }, next: { revalidate: 0 } },
+			`${GEOCODING_API_BASE_URL}?${searchParams.toString()}`,
+			{ headers: JSON_ACCEPT_HEADERS, next: NO_STORE_CACHE_OPTION },
 		);
 		if (!response.ok) return null;
 		const data: GeocodingResponse = await response.json();
@@ -60,9 +82,9 @@ export async function fetchCurveData(
 
 	const empty: WeatherCurveData = {
 		days: [],
-		now: { temp: null, icon: "cloudy" },
+		now: { temp: null, icon: DEFAULT_FALLBACK_ICON },
 		station,
-		source: "open-meteo",
+		source: DEFAULT_WEATHER_SOURCE,
 		updated: "",
 	};
 
@@ -72,17 +94,16 @@ export async function fetchCurveData(
 		const query = new URLSearchParams({
 			latitude: String(latitude),
 			longitude: String(longitude),
-			current: "temperature_2m,weather_code,is_day",
-			hourly:
-				"temperature_2m,precipitation_probability,precipitation,weather_code,is_day",
-			daily: "uv_index_max",
-			timezone: "auto",
-			forecast_days: "8",
+			current: CURRENT_WEATHER_FIELDS,
+			hourly: HOURLY_WEATHER_FIELDS,
+			daily: DAILY_WEATHER_FIELDS,
+			timezone: DEFAULT_TIMEZONE,
+			forecast_days: FORECAST_DAYS_COUNT,
 		});
-		const response = await fetch(
-			`https://api.open-meteo.com/v1/forecast?${query}`,
-			{ headers: { Accept: "application/json" }, next: { revalidate: 0 } },
-		);
+		const response = await fetch(`${FORECAST_API_BASE_URL}?${query}`, {
+			headers: JSON_ACCEPT_HEADERS,
+			next: NO_STORE_CACHE_OPTION,
+		});
 		if (!response.ok) return empty;
 
 		const raw: OpenMeteoInput = await response.json();

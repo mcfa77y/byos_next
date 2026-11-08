@@ -16,6 +16,19 @@ import {
 
 const TALL = 860;
 
+const DESIGN_FULL = "full";
+const DESIGN_WIDE = "wide";
+const DESIGN_COLUMN = "column";
+const DESIGN_PORTRAIT = "portrait";
+const DESIGN_LIST = "list";
+const DESIGN_QUADRANT = "quadrant";
+
+const VIEWBOX_WIDTH_WIDE = 800;
+const VIEWBOX_WIDTH_NARROW = 400;
+
+const WIDE_SCREEN_MIN_WIDTH = 600;
+const MEDIUM_SCREEN_MIN_HEIGHT = 360;
+const PORTRAIT_ASPECT_RATIO_THRESHOLD = 0.6;
 export function designFull(
 	viewHeight: number,
 	view: View,
@@ -378,19 +391,46 @@ export function plan(
 	canvasHeight: number,
 ): [string, number, number] {
 	const aspectRatio = canvasWidth / canvasHeight;
-	if (canvasWidth >= 600 && canvasHeight >= 360) {
-		return ["full", 800, clamp(800 / aspectRatio, 480, 680)];
+	if (
+		canvasWidth >= WIDE_SCREEN_MIN_WIDTH &&
+		canvasHeight >= MEDIUM_SCREEN_MIN_HEIGHT
+	) {
+		return [
+			DESIGN_FULL,
+			VIEWBOX_WIDTH_WIDE,
+			clamp(VIEWBOX_WIDTH_WIDE / aspectRatio, 480, 680),
+		];
 	}
-	if (canvasWidth >= 600) {
-		return ["wide", 800, clamp(800 / aspectRatio, 240, 400)];
+	if (canvasWidth >= WIDE_SCREEN_MIN_WIDTH) {
+		return [
+			DESIGN_WIDE,
+			VIEWBOX_WIDTH_WIDE,
+			clamp(VIEWBOX_WIDTH_WIDE / aspectRatio, 240, 400),
+		];
 	}
-	if (400 / aspectRatio >= TALL) {
-		return ["column", 400, clamp(400 / aspectRatio, TALL, 1400)];
+	if (VIEWBOX_WIDTH_NARROW / aspectRatio >= TALL) {
+		return [
+			DESIGN_COLUMN,
+			VIEWBOX_WIDTH_NARROW,
+			clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, TALL, 1400),
+		];
 	}
-	if (canvasHeight >= 360) {
-		return aspectRatio <= 0.6
-			? ["portrait", 400, clamp(400 / aspectRatio, 520, 1400)]
-			: ["list", 400, clamp(400 / aspectRatio, 480, 760)];
+	if (canvasHeight >= MEDIUM_SCREEN_MIN_HEIGHT) {
+		return aspectRatio <= PORTRAIT_ASPECT_RATIO_THRESHOLD
+			? [
+					DESIGN_PORTRAIT,
+					VIEWBOX_WIDTH_NARROW,
+					clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, 520, 1400),
+				]
+			: [
+					DESIGN_LIST,
+					VIEWBOX_WIDTH_NARROW,
+					clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, 480, 760),
+				];
 	}
-	return ["quadrant", 400, clamp(400 / aspectRatio, 240, 340)];
+	return [
+		DESIGN_QUADRANT,
+		VIEWBOX_WIDTH_NARROW,
+		clamp(VIEWBOX_WIDTH_NARROW / aspectRatio, 240, 340),
+	];
 }
