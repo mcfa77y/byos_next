@@ -1,0 +1,53 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview.json",
+  "next": true,
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "utils/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,js,mjs}"
+  ],
+  "entry": [
+    "app/**/route.ts",
+    "app/**/page.tsx",
+    "app/**/layout.tsx",
+    "app/**/not-found.tsx",
+    "app/actions/**/*.ts",
+    "scripts/**/*.{ts,js,mjs}",
+    "app/(app)/tools/tools-components/bitmap-font-designer/bitmap-font-designer.tsx",
+    "app/(app)/tools/tools-components/image-ditherer/image-ditherer.tsx",
+    "components/ui/aspect-ratio.tsx",
+    "components/ui/progress.tsx",
+    "components/ui/textarea.tsx",
+    "utils/image-processing.ts"
+  ],
+  "ignore": [
+    "**/*.generated.ts"
+  ],
+  "ignoreDependencies": [
+    "@radix-ui/*",
+    "@redux-devtools/extension",
+    "@takumi-rs/wasm",
+    "@tanstack/react-virtual",
+    "jimp",
+    "react-virtuoso",
+    "satori",
+    "zustand",
+    "baseline-browser-mapping",
+    "eslint*",
+    "shadcn",
+    "server-only",
+    "tailwindcss",
+    "tailwindcss-animate"
+  ],
+  "rules": {
+    "files": "warn",
+    "dependencies": "error",
+    "unlisted": "error",
+    "exports": "off",
+    "types": "off",
+    "duplicates": "off"
+  }
+}
