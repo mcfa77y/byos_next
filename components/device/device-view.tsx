@@ -359,6 +359,47 @@ type HealthItem = {
 	label: string;
 };
 
+function getWifiTone(rssi: number | null | undefined): string {
+	if (rssi == null) return "text-muted-foreground";
+	if (rssi >= -60) return "text-green-600 dark:text-green-400";
+	if (rssi >= -70) return "text-amber-600 dark:text-amber-400";
+	if (rssi >= -80) return "text-orange-600 dark:text-orange-400";
+	return "text-red-600 dark:text-red-400";
+}
+
+function getBatteryTone(
+	battery: ReturnType<typeof estimateBatteryLife> | null,
+): string {
+	if (!battery) return "text-muted-foreground";
+	if (battery.isCharging || battery.batteryPercentage >= 50) {
+		return "text-green-600 dark:text-green-400";
+	}
+	if (battery.batteryPercentage < 20) {
+		return "text-red-600 dark:text-red-400";
+	}
+	return "text-amber-600 dark:text-amber-400";
+}
+
+function getBatteryIcon(
+	battery: ReturnType<typeof estimateBatteryLife> | null,
+) {
+	if (battery?.isCharging) return BatteryCharging;
+	if (battery && battery.batteryPercentage < 20) return BatteryLow;
+	return Battery;
+}
+
+function getModeIcon(mode: DeviceDisplayMode) {
+	if (mode === DeviceDisplayMode.PLAYLIST) return ListMusic;
+	if (mode === DeviceDisplayMode.MIXUP) return Shuffle;
+	return Monitor;
+}
+
+function getModeText(mode: DeviceDisplayMode): string {
+	if (mode === DeviceDisplayMode.PLAYLIST) return "Playlist";
+	if (mode === DeviceDisplayMode.MIXUP) return "Mixup";
+	return "Screen";
+}
+
 function getHealthItems(
 	device: Device & { status?: string },
 	battery: ReturnType<typeof estimateBatteryLife> | null,
@@ -369,43 +410,24 @@ function getHealthItems(
 	const mode = device.display_mode;
 	const next = device.next_expected_update;
 
-	const wifiTone =
-		rssi == null
-			? "text-muted-foreground"
-			: rssi >= -60
-				? "text-green-600 dark:text-green-400"
-				: rssi >= -70
-					? "text-amber-600 dark:text-amber-400"
-					: rssi >= -80
-						? "text-orange-600 dark:text-orange-400"
-						: "text-red-600 dark:text-red-400";
-	const WifiIcon = rssi != null ? Wifi : WifiOff;
+	const wifiTone = getWifiTone(rssi);
+	const WifiIcon = rssi == null ? WifiOff : Wifi;
+	const batteryTone = getBatteryTone(battery);
+	const BatteryIcon = getBatteryIcon(battery);
+	const ModeIcon = getModeIcon(mode);
+	const modeText = getModeText(mode);
 
-	const batteryTone = !battery
-		? "text-muted-foreground"
-		: battery.isCharging || battery.batteryPercentage >= 50
-			? "text-green-600 dark:text-green-400"
-			: battery.batteryPercentage < 20
-				? "text-red-600 dark:text-red-400"
-				: "text-amber-600 dark:text-amber-400";
-	const BatteryIcon = battery?.isCharging
-		? BatteryCharging
-		: battery && battery.batteryPercentage < 20
-			? BatteryLow
-			: Battery;
-
-	const ModeIcon =
-		mode === DeviceDisplayMode.PLAYLIST
-			? ListMusic
-			: mode === DeviceDisplayMode.MIXUP
-				? Shuffle
-				: Monitor;
-	const modeText =
-		mode === DeviceDisplayMode.PLAYLIST
-			? "Playlist"
-			: mode === DeviceDisplayMode.MIXUP
-				? "Mixup"
-				: "Screen";
+	const batteryText = !battery
+		? "No batt"
+		: battery.isCharging
+			? "Charging"
+			: `${battery.batteryPercentage}%`;
+	const batteryStateDesc = battery?.isCharging
+		? "charging"
+		: `${battery?.batteryPercentage}%`;
+	const batteryLabel = battery
+		? `Battery ${batteryStateDesc} (${device.battery_voltage}V)`
+		: "Battery not reported";
 
 	return [
 		{
@@ -417,23 +439,17 @@ function getHealthItems(
 		{
 			id: "wifi",
 			icon: <WifiIcon className={cn("h-4 w-4", wifiTone)} />,
-			text: rssi != null ? `${rssi} dBm` : "No RSSI",
+			text: rssi == null ? "No RSSI" : `${rssi} dBm`,
 			label:
-				rssi != null
-					? `WiFi ${rssi} dBm · ${getSignalQuality(rssi)}`
-					: "WiFi RSSI not reported",
+				rssi == null
+					? "WiFi RSSI not reported"
+					: `WiFi ${rssi} dBm · ${getSignalQuality(rssi)}`,
 		},
 		{
 			id: "battery",
 			icon: <BatteryIcon className={cn("h-4 w-4", batteryTone)} />,
-			text: battery
-				? battery.isCharging
-					? "Charging"
-					: `${battery.batteryPercentage}%`
-				: "No batt",
-			label: battery
-				? `Battery ${battery.isCharging ? "charging" : `${battery.batteryPercentage}%`} (${device.battery_voltage}V)`
-				: "Battery not reported",
+			text: batteryText,
+			label: batteryLabel,
 		},
 		{
 			id: "mode",
@@ -458,7 +474,7 @@ function getHealthItems(
 	];
 }
 
-function HealthChip({ icon, text, label }: HealthItem) {
+function HealthChip({ icon, text, label }: Readonly<Omit<HealthItem, "id">>) {
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>

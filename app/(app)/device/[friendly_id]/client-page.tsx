@@ -75,7 +75,7 @@ export default function DeviceClientPage({
 	useEffect(() => {
 		if (isEditingRef.current) return;
 		setDevice(initialDevice);
-		setEditedDevice(JSON.parse(JSON.stringify(initialDevice)));
+		setEditedDevice(structuredClone(initialDevice));
 	}, [initialDevice]);
 
 	// State for device size preset
@@ -187,30 +187,28 @@ export default function DeviceClientPage({
 					[child]: value,
 				},
 			});
-		} else {
-			if (name === "model") {
-				const model = trmnlModels.find((item) => item.name === value);
-				const nextPaletteId = model?.palette_ids[0] ?? null;
-				setEditedDevice({
-					...editedDevice,
-					model: value || null,
-					palette_id: nextPaletteId,
-					screen_width: model?.width ?? editedDevice.screen_width,
-					screen_height: model?.height ?? editedDevice.screen_height,
-				});
-				if (model?.width === 800 && model.height === 480) {
-					setDeviceSizePreset("800x480");
-				} else if (model?.width === 1872 && model.height === 1404) {
-					setDeviceSizePreset("1872x1404");
-				} else if (model) {
-					setDeviceSizePreset("custom");
-				}
-			} else {
-				setEditedDevice({
-					...editedDevice,
-					[name]: value,
-				});
+		} else if (name === "model") {
+			const model = trmnlModels.find((item) => item.name === value);
+			const nextPaletteId = model?.palette_ids[0] ?? null;
+			setEditedDevice({
+				...editedDevice,
+				model: value || null,
+				palette_id: nextPaletteId,
+				screen_width: model?.width ?? editedDevice.screen_width,
+				screen_height: model?.height ?? editedDevice.screen_height,
+			});
+			if (model?.width === 800 && model.height === 480) {
+				setDeviceSizePreset("800x480");
+			} else if (model?.width === 1872 && model.height === 1404) {
+				setDeviceSizePreset("1872x1404");
+			} else if (model) {
+				setDeviceSizePreset("custom");
 			}
+		} else {
+			setEditedDevice({
+				...editedDevice,
+				[name]: value,
+			});
 		}
 	};
 

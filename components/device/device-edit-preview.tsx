@@ -22,14 +22,14 @@ export function DeviceEditPreview({
 	hasUnknownModel,
 	savedModelName,
 	playlistScreen,
-}: {
+}: Readonly<{
 	editedDevice: Device & { status?: string; type?: string };
 	selectedModel?: TrmnlModel | null;
 	selectedPalette?: TrmnlPalette;
 	hasUnknownModel: boolean;
 	savedModelName: string | null;
 	playlistScreen?: string | null;
-}) {
+}>) {
 	const {
 		width: deviceWidth,
 		height: deviceHeight,
@@ -87,11 +87,7 @@ export function DeviceEditPreview({
 				}
 			/>
 			<div className="flex flex-1 items-center justify-center bg-[radial-gradient(circle_at_50%_0%,theme(colors.muted/40),transparent_70%)] p-6">
-				{!heroSrc ? (
-					<div className="max-w-sm text-center text-sm text-muted-foreground">
-						Preview unavailable until the display configuration is complete.
-					</div>
-				) : (
+				{heroSrc ? (
 					<div
 						className={cn(
 							"w-full",
@@ -109,6 +105,10 @@ export function DeviceEditPreview({
 								className="absolute inset-0"
 							/>
 						</DeviceFrame>
+					</div>
+				) : (
+					<div className="max-w-sm text-center text-sm text-muted-foreground">
+						Preview unavailable until the display configuration is complete.
 					</div>
 				)}
 			</div>
@@ -138,10 +138,10 @@ export function DeviceEditPreview({
 function MetaRow({
 	label,
 	children,
-}: {
+}: Readonly<{
 	label: string;
 	children: React.ReactNode;
-}) {
+}>) {
 	return (
 		<div className="flex flex-col gap-0.5">
 			<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
