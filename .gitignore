@@ -60,3 +60,7 @@ graphify-out/
 
 # local overrides
 data/trmnl/models.local.json
+
+# SonarQube
+.scannerwork/
+.sonar/
