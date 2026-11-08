@@ -129,8 +129,10 @@ async function encode(
 			);
 		}
 
-		const buffer = candidates.reduce((smallest, candidate) =>
-			candidate.length < smallest.length ? candidate : smallest,
+		const buffer = candidates.reduce(
+			(smallest, candidate) =>
+				candidate.length < smallest.length ? candidate : smallest,
+			candidates[0],
 		);
 		return {
 			buffer,

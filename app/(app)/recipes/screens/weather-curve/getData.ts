@@ -180,7 +180,7 @@ function parseCurrent(
 		} else if (timeStr.length === 13) {
 			timeStr = `${timeStr}:00:00`;
 		}
-		const hasZone = /[+-]\d\d:?\d\d|Z$/i.test(timeStr);
+		const hasZone = /(?:[+-]\d\d:?\d\d|Z)$/i.test(timeStr);
 		return {
 			temp: rnd1(cur.temperature_2m),
 			icon: wmoIcon(cur.weather_code, (cur.is_day ?? 1) !== 0),
