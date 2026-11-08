@@ -167,7 +167,7 @@ function formatZoneOffset(offsetSeconds: number): string {
 	return `${sign}${pad(Math.floor(abs / 3600))}:${pad(Math.floor((abs % 3600) / 60))}`;
 }
 
-function parseCurrent(
+export function parseCurrent(
 	input: OpenMeteoInput,
 	zone: string,
 	firstRow?: HourlyRow,
