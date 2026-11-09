@@ -106,7 +106,19 @@ export interface RectOptions {
 	y: number;
 	width: number;
 	height: number;
-	extraProps?: Record<string, string | number>;
+	fill?: string;
+	rx?: number;
+}
+
+export function Rect({
+	x,
+	y,
+	width,
+	height,
+	fill = INK,
+	rx,
+}: RectOptions): ReactElement {
+	return <rect x={x} y={y} width={width} height={height} fill={fill} rx={rx} />;
 }
 
 export interface TextRenderOptions extends TextOptions {
@@ -133,33 +145,11 @@ export function createPrimitives({
 	viewWidth,
 	viewHeight,
 }: CreatePrimitivesOptions) {
-	let keyCounter = 0;
-	const nextKey = () => `e${keyCounter++}`;
 	const scale = Math.min(canvasWidth / viewWidth, canvasHeight / viewHeight);
 	const offsetX = (canvasWidth - viewWidth * scale) / 2;
 	const offsetY = (canvasHeight - viewHeight * scale) / 2;
 
-	function rect({
-		x,
-		y,
-		width,
-		height,
-		extraProps = {},
-	}: RectOptions): ReactElement {
-		return (
-			<rect
-				key={nextKey()}
-				x={x}
-				y={y}
-				width={width}
-				height={height}
-				fill={INK}
-				{...extraProps}
-			/>
-		);
-	}
-
-	function txt({
+	function Txt({
 		x,
 		y,
 		content,
@@ -185,8 +175,6 @@ export function createPrimitives({
 		const left = offsetX + x * scale - anchorOffset;
 		return (
 			<div
-				key={nextKey()}
-				// PreSatori maps font-* classes to the registered font tables; a bare
 				// style.fontFamily is overridden by its blockkie default.
 				className="font-inter"
 				style={{
@@ -207,7 +195,7 @@ export function createPrimitives({
 	}
 
 	/** Big current temperature; shrinks only if it would run into the icon. */
-	function bigTemp({ x, y, size, maxRight, currentTemp }: BigTempOptions) {
+	function BigTemp({ x, y, size, maxRight, currentTemp }: BigTempOptions) {
 		const tempText = formatDegrees(currentTemp);
 		const letterSpacing = BIG_TEMP_LETTER_SPACING_FACTOR * size;
 		const estimatedWidth =
@@ -218,32 +206,35 @@ export function createPrimitives({
 			}) +
 			letterSpacing * tempText.length;
 		if (x + estimatedWidth <= maxRight) {
-			return txt({
-				x,
-				y,
-				content: tempText,
-				size,
-				weight: BIG_TEMP_FONT_WEIGHT,
-				letterSpacing,
-			});
+			return (
+				<Txt
+					x={x}
+					y={y}
+					content={tempText}
+					size={size}
+					weight={BIG_TEMP_FONT_WEIGHT}
+					letterSpacing={letterSpacing}
+				/>
+			);
 		}
 		const scaledSize = (size * (maxRight - x)) / estimatedWidth;
-		return txt({
-			x,
-			y,
-			content: tempText,
-			size: scaledSize,
-			weight: BIG_TEMP_FONT_WEIGHT,
-			letterSpacing: BIG_TEMP_LETTER_SPACING_FACTOR * scaledSize,
-		});
+		return (
+			<Txt
+				x={x}
+				y={y}
+				content={tempText}
+				size={scaledSize}
+				weight={BIG_TEMP_FONT_WEIGHT}
+				letterSpacing={BIG_TEMP_LETTER_SPACING_FACTOR * scaledSize}
+			/>
+		);
 	}
-	return { nextKey, rect, txt, bigTemp };
+	return { Rect, Txt, BigTemp };
 }
 
 export interface Primitives {
-	nextKey: () => string;
-	rect: (options: RectOptions) => ReactElement;
-	txt: (options: TextRenderOptions) => ReactElement;
-	bigTemp: (options: BigTempOptions) => ReactElement;
+	Rect: (options: RectOptions) => ReactElement;
+	Txt: (options: TextRenderOptions) => ReactElement;
+	BigTemp: (options: BigTempOptions) => ReactElement;
 }
 export type View = Model & Primitives;

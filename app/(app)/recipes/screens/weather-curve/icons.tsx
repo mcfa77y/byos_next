@@ -177,7 +177,7 @@ export interface IconOptions {
 	strokeWidth: number;
 }
 
-export function icon({
+export function Icon({
 	name,
 	centerX,
 	centerY,
@@ -290,7 +290,6 @@ export function icon({
 	}
 	return (
 		<g
-			key={`icon-${centerX}-${centerY}`}
 			transform={`translate(${centerX} ${centerY}) scale(${scaleFactor})`}
 			fill="none"
 			stroke={INK}
@@ -317,7 +316,7 @@ export interface DropOptions {
 }
 
 /** Rain drop: filled from 50% chance of rain, outlined below. */
-export function drop({ centerX, centerY, height, filled }: DropOptions) {
+export function Drop({ centerX, centerY, height, filled }: DropOptions) {
 	const width = height * DROP_WIDTH_TO_HEIGHT_RATIO;
 	const topY = centerY - height / 2;
 	const bottomRadius = width / 2;
@@ -332,10 +331,9 @@ export function drop({ centerX, centerY, height, filled }: DropOptions) {
 		`${centerX + bottomRadius} ${bottomCenterY}A${bottomRadius} ${bottomRadius} 0 0 1 ${centerX - bottomRadius} ${bottomCenterY}` +
 		`C${centerX - bottomRadius} ${controlPointOffsetY} ${centerX - controlPointOffsetX} ${controlPointTopY} ${centerX} ${topY}Z`;
 	return filled ? (
-		<path key={`drop-${centerX}-${centerY}`} d={pathData} fill={INK} />
+		<path d={pathData} fill={INK} />
 	) : (
 		<path
-			key={`drop-${centerX}-${centerY}`}
 			d={pathData}
 			fill="none"
 			stroke={INK}

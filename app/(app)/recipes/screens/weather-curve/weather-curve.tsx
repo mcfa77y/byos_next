@@ -1,4 +1,8 @@
-import { isValidElement, type ReactElement, type ReactNode } from "react";
+import React, {
+	isValidElement,
+	type ReactElement,
+	type ReactNode,
+} from "react";
 import type { z } from "zod";
 import {
 	DEFAULT_IMAGE_HEIGHT,
@@ -11,12 +15,12 @@ import {
 } from "@/lib/trmnl/screen-profile";
 import { PreSatori } from "@/utils/pre-satori";
 import {
-	designColumn,
-	designFull,
-	designList,
-	designPortrait,
-	designQuadrant,
-	designWide,
+	DesignColumn,
+	DesignFull,
+	DesignList,
+	DesignPortrait,
+	DesignQuadrant,
+	DesignWide,
 	plan,
 } from "./designs";
 import getData from "./getData";
@@ -30,6 +34,34 @@ import {
 import { createPrimitives, INK, PAPER, type View } from "./primitives";
 
 export { dataSchema, paramsSchema };
+
+function partitionTree(
+	node: ReactNode,
+	svgChildren: ReactNode[],
+	textChildren: ReactNode[],
+) {
+	React.Children.forEach(node, (child) => {
+		if (!isValidElement(child)) return;
+		if (child.type === React.Fragment) {
+			const { children } = child.props as { children?: ReactNode };
+			partitionTree(children, svgChildren, textChildren);
+		} else if (child.type === "span") {
+			// Transparent structural grouping span used for semantic loop keys
+			const { children } = child.props as { children?: ReactNode };
+			partitionTree(children, svgChildren, textChildren);
+		} else if (typeof child.type === "function") {
+			// Component function: evaluate and recurse
+			const rendered = (child.type as (props: unknown) => ReactNode)(
+				child.props,
+			);
+			partitionTree(rendered, svgChildren, textChildren);
+		} else if (child.type === "div") {
+			textChildren.push(child);
+		} else {
+			svgChildren.push(child);
+		}
+	});
+}
 
 export default function WeatherCurve({
 	width = DEFAULT_IMAGE_WIDTH,
@@ -63,45 +95,63 @@ export default function WeatherCurve({
 		}),
 	};
 	const needsDots = !hasGray && view.hasRain;
-	const renderedItems: ReactNode[] = [];
+	const { Txt } = view;
 
+	let content: ReactElement;
 	if (view.days.length === 0) {
-		renderedItems.push(
-			view.txt({
-				x: 24,
-				y: viewHeight / 2,
-				content: view.station || "Weather Curve",
-				size: 20,
-				weight: 600,
-			}),
-			view.txt({
-				x: 24,
-				y: viewHeight / 2 + 24,
-				content: "Loading…",
-				size: 16,
-			}),
+		content = (
+			<>
+				<Txt
+					x={24}
+					y={viewHeight / 2}
+					content={view.station || "Weather Curve"}
+					size={20}
+					weight={600}
+				/>
+				<Txt x={24} y={viewHeight / 2 + 24} content="Loading…" size={16} />
+			</>
 		);
 	} else {
-		const renderByDesign: Record<string, () => ReactElement[]> = {
-			full: () => designFull({ viewHeight, view, hasGray }),
-			portrait: () => designPortrait({ viewHeight, view, hasGray }),
-			column: () => designColumn(viewHeight, view),
-			list: () => designList(viewHeight, view),
-			wide: () => designWide({ viewHeight, view, hasGray }),
-			quadrant: () => designQuadrant(viewHeight, view),
-		};
-		renderedItems.push(...renderByDesign[selectedDesign]());
+		switch (selectedDesign) {
+			case "full":
+				content = (
+					<DesignFull viewHeight={viewHeight} view={view} hasGray={hasGray} />
+				);
+				break;
+			case "portrait":
+				content = (
+					<DesignPortrait
+						viewHeight={viewHeight}
+						view={view}
+						hasGray={hasGray}
+					/>
+				);
+				break;
+			case "column":
+				content = <DesignColumn viewHeight={viewHeight} view={view} />;
+				break;
+			case "list":
+				content = <DesignList viewHeight={viewHeight} view={view} />;
+				break;
+			case "wide":
+				content = (
+					<DesignWide viewHeight={viewHeight} view={view} hasGray={hasGray} />
+				);
+				break;
+			case "quadrant":
+				content = <DesignQuadrant viewHeight={viewHeight} view={view} />;
+				break;
+			default:
+				content = (
+					<DesignFull viewHeight={viewHeight} view={view} hasGray={hasGray} />
+				);
+		}
 	}
 
-	// txt() output goes to the HTML overlay; everything else stays in the SVG.
+	// Partition evaluated nodes: Txt (divs) to HTML overlay; paths/rects/lines/circles to SVG
 	const svgChildren: ReactNode[] = [];
 	const textChildren: ReactNode[] = [];
-	for (const element of renderedItems) {
-		(isValidElement(element) && element.type === "div"
-			? textChildren
-			: svgChildren
-		).push(element);
-	}
+	partitionTree(content, svgChildren, textChildren);
 
 	return (
 		<PreSatori width={canvasWidth} height={canvasHeight}>

@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { drop, icon } from "./icons";
+import { Drop, Icon } from "./icons";
 import { hasRain, type ModelDay } from "./model";
 import {
 	estimateTextWidth,
@@ -7,6 +7,7 @@ import {
 	GRAY,
 	INK,
 	PAPER,
+	Rect,
 	trimToFit,
 	type View,
 } from "./primitives";
@@ -115,7 +116,7 @@ export interface StatsOptions {
 }
 
 /** uvColumnXs: the columns used instead of columnXs when today's UV index is shown. */
-export function stats({
+export function Stats({
 	columnXs,
 	labelY,
 	valueY,
@@ -123,8 +124,8 @@ export function stats({
 	day,
 	uvColumnXs,
 	view,
-}: StatsOptions): ReactElement[] {
-	const { txt } = view;
+}: StatsOptions): ReactElement {
+	const { Txt } = view;
 	const showUv = view.showUv && uvColumnXs && day.uv != null;
 	const items: [string, string][] = [
 		[view.i18n.high, formatDegrees(day.high)],
@@ -133,23 +134,29 @@ export function stats({
 	if (hasRain(day)) items.push([view.i18n.rain, `${day.rain}%`]);
 	if (showUv) items.push(["UV", String(day.uv)]);
 	const positions = showUv ? uvColumnXs : columnXs;
-	return items.flatMap((statItem, index) => [
-		txt({
-			x: positions[index],
-			y: labelY,
-			content: statItem[0],
-			size: 11,
-			weight: 600,
-			letterSpacing: 1,
-		}),
-		txt({
-			x: positions[index],
-			y: valueY,
-			content: statItem[1],
-			size: fontSize,
-			weight: 600,
-		}),
-	]);
+	return (
+		<>
+			{items.map((statItem, index) => (
+				<span key={statItem[0]}>
+					<Txt
+						x={positions[index]}
+						y={labelY}
+						content={statItem[0]}
+						size={11}
+						weight={600}
+						letterSpacing={1}
+					/>
+					<Txt
+						x={positions[index]}
+						y={valueY}
+						content={statItem[1]}
+						size={fontSize}
+						weight={600}
+					/>
+				</span>
+			))}
+		</>
+	);
 }
 
 export interface FooterOptions {
@@ -161,33 +168,35 @@ export interface FooterOptions {
 	view: View;
 }
 
-export function footer({
+export function Footer({
 	startX,
 	endX,
 	ruleY,
 	textY,
 	fontSize,
 	view,
-}: FooterOptions): ReactElement[] {
-	const { rect, txt } = view;
-	return [
-		rect({ x: startX, y: ruleY, width: endX - startX, height: 1 }),
-		txt({
-			x: startX,
-			y: textY,
-			content: view.i18n.title + (view.credit ? ` · ${view.credit}` : ""),
-			size: fontSize,
-			weight: 500,
-		}),
-		txt({
-			x: endX,
-			y: textY,
-			content: view.updated,
-			size: fontSize,
-			weight: 500,
-			anchor: "end",
-		}),
-	];
+}: FooterOptions): ReactElement {
+	const { Txt } = view;
+	return (
+		<>
+			<Rect x={startX} y={ruleY} width={endX - startX} height={1} />
+			<Txt
+				x={startX}
+				y={textY}
+				content={view.i18n.title + (view.credit ? ` · ${view.credit}` : "")}
+				size={fontSize}
+				weight={500}
+			/>
+			<Txt
+				x={endX}
+				y={textY}
+				content={view.updated}
+				size={fontSize}
+				weight={500}
+				anchor="end"
+			/>
+		</>
+	);
 }
 
 export interface ChartOptions {
@@ -198,14 +207,13 @@ export interface ChartOptions {
 }
 
 /** 7-day chart: highs, lows, chance of rain, one icon per day. */
-export function chart({
+export function Chart({
 	days,
 	geom,
 	view,
 	hasGray,
-}: ChartOptions): ReactElement[] {
-	const { nextKey, rect, txt } = view;
-	const out: ReactElement[] = [];
+}: ChartOptions): ReactElement {
+	const { Txt } = view;
 	const dayCount = days.length;
 	const columnWidth = (geom.endX - geom.startX) / dayCount;
 	const columnCenterX = (dayIndex: number) =>
@@ -233,11 +241,12 @@ export function chart({
 		];
 	};
 
+	const gridLines: ReactElement[] = [];
 	for (let index = 1; index < dayCount; index++) {
 		const gridX = Math.floor(geom.startX + columnWidth * index) + 0.5;
-		out.push(
+		gridLines.push(
 			<line
-				key={nextKey()}
+				key={`grid-${index}`}
 				x1={gridX}
 				y1={geom.gridTop}
 				x2={gridX}
@@ -248,149 +257,157 @@ export function chart({
 		);
 	}
 
+	const rainDottedLine: ReactElement[] = [];
 	if (view.hasRain) {
-		out.push(
-			<path
-				key={nextKey()}
-				d={`${monotone(withChartEnds(days.map((day) => rainToY(day.rain || 0))))}L${geom.endX} ${geom.baseY}L${geom.startX} ${geom.baseY}Z`}
-				fill={hasGray ? GRAY : "url(#wc-dots)"}
-			/>,
-		);
 		for (let x = geom.startX; x < geom.endX; x += 4) {
-			out.push(rect({ x, y: geom.rainTopY, width: 1, height: 1 }));
+			rainDottedLine.push(
+				<Rect
+					key={`rain-dot-${x}`}
+					x={x}
+					y={geom.rainTopY}
+					width={1}
+					height={1}
+				/>,
+			);
 		}
 	}
+
+	let legendElement: ReactElement | null = null;
 	if (geom.showLegend && view.hasRain) {
 		const legendWidth =
 			estimateTextWidth({ text: view.i18n.legend, size: 11, weight: 500 }) + 10;
-		out.push(
-			rect({
-				x: geom.endX - legendWidth - 5,
-				y: geom.rainTopY + 3,
-				width: legendWidth + 5,
-				height: 16,
-				extraProps: { fill: PAPER },
-			}),
-			txt({
-				x: geom.endX - 5,
-				y: geom.rainTopY + 15,
-				content: view.i18n.legend,
-				size: 11,
-				weight: 500,
-				anchor: "end",
-			}),
+		legendElement = (
+			<>
+				<Rect
+					x={geom.endX - legendWidth - 5}
+					y={geom.rainTopY + 3}
+					width={legendWidth + 5}
+					height={16}
+					fill={PAPER}
+				/>
+				<Txt
+					x={geom.endX - 5}
+					y={geom.rainTopY + 15}
+					content={view.i18n.legend}
+					size={11}
+					weight={500}
+					anchor="end"
+				/>
+			</>
 		);
 	}
-	out.push(
-		rect({
-			x: geom.startX,
-			y: geom.baseY,
-			width: geom.endX - geom.startX,
-			height: 1,
-		}),
-		<path
-			key={nextKey()}
-			d={monotone(withChartEnds(highs.map(tempToY)))}
-			fill="none"
-			stroke={INK}
-			strokeWidth={geom.highStrokeWidth}
-		/>,
-		<path
-			key={nextKey()}
-			d={monotone(withChartEnds(lows.map(tempToY)))}
-			fill="none"
-			stroke={INK}
-			strokeWidth={geom.lowStrokeWidth}
-		/>,
-	);
 
-	days.forEach((day, index) => {
-		const centerX = columnCenterX(index);
-		const highY = tempToY(day.high ?? 0);
-		const lowY = tempToY(day.low ?? 0);
-		out.push(
-			<circle
-				key={nextKey()}
-				cx={centerX}
-				cy={highY}
-				r={geom.highRadius}
-				fill={PAPER}
+	return (
+		<>
+			{gridLines}
+			{view.hasRain && (
+				<path
+					d={`${monotone(withChartEnds(days.map((day) => rainToY(day.rain || 0))))}L${geom.endX} ${geom.baseY}L${geom.startX} ${geom.baseY}Z`}
+					fill={hasGray ? GRAY : "url(#wc-dots)"}
+				/>
+			)}
+			{rainDottedLine}
+			{legendElement}
+			<Rect
+				x={geom.startX}
+				y={geom.baseY}
+				width={geom.endX - geom.startX}
+				height={1}
+			/>
+			<path
+				d={monotone(withChartEnds(highs.map(tempToY)))}
+				fill="none"
 				stroke={INK}
-				strokeWidth={geom.highRadiusStrokeWidth}
-			/>,
-			<circle
-				key={nextKey()}
-				cx={centerX}
-				cy={lowY}
-				r={geom.lowRadius}
-				fill={INK}
-			/>,
-			txt({
-				x: centerX,
-				y: highY + geom.highLabelOffset,
-				content: formatDegrees(day.high),
-				size: geom.highFontSize,
-				weight: 600,
-				anchor: "middle",
-			}),
-			txt({
-				x: centerX,
-				y: lowY + geom.lowLabelOffset,
-				content: formatDegrees(day.low),
-				size: geom.lowFontSize,
-				weight: 500,
-				anchor: "middle",
-			}),
-			icon({
-				name: day.icon,
-				centerX,
-				centerY: geom.iconCenterY || (highY + lowY) / 2,
-				scaleFactor: geom.iconScale,
-				strokeWidth: geom.iconStrokeWidth,
-			}),
-		);
-		if (index === 0) {
-			const labelPillWidth = Math.max(
-				geom.pillWidth,
-				estimateTextWidth({
-					text: day.label,
-					size: geom.dayFontSize,
-					weight: 600,
-				}) +
-					geom.pillHeight * 0.6,
-			);
-			out.push(
-				rect({
-					x: centerX - labelPillWidth / 2,
-					y: geom.pillY,
-					width: labelPillWidth,
-					height: geom.pillHeight,
-					extraProps: { rx: geom.pillHeight / 2 },
-				}),
-				txt({
-					x: centerX,
-					y: geom.dayLabelY,
-					content: day.label,
-					size: geom.dayFontSize,
-					weight: 600,
-					anchor: "middle",
-					fill: PAPER,
-				}),
-			);
-		} else {
-			out.push(
-				txt({
-					x: centerX,
-					y: geom.dayLabelY,
-					content: day.label,
-					size: geom.dayFontSize,
-					weight: 600,
-					anchor: "middle",
-				}),
-			);
-		}
-	});
-	return out;
+				strokeWidth={geom.highStrokeWidth}
+			/>
+			<path
+				d={monotone(withChartEnds(lows.map(tempToY)))}
+				fill="none"
+				stroke={INK}
+				strokeWidth={geom.lowStrokeWidth}
+			/>
+			{days.map((day, index) => {
+				const centerX = columnCenterX(index);
+				const highY = tempToY(day.high ?? 0);
+				const lowY = tempToY(day.low ?? 0);
+				const isFirst = index === 0;
+				const labelPillWidth = Math.max(
+					geom.pillWidth,
+					estimateTextWidth({
+						text: day.label,
+						size: geom.dayFontSize,
+						weight: 600,
+					}) +
+						geom.pillHeight * 0.6,
+				);
+				return (
+					<span key={`day-${index}`}>
+						<circle
+							cx={centerX}
+							cy={highY}
+							r={geom.highRadius}
+							fill={PAPER}
+							stroke={INK}
+							strokeWidth={geom.highRadiusStrokeWidth}
+						/>
+						<circle cx={centerX} cy={lowY} r={geom.lowRadius} fill={INK} />
+						<Txt
+							x={centerX}
+							y={highY + geom.highLabelOffset}
+							content={formatDegrees(day.high)}
+							size={geom.highFontSize}
+							weight={600}
+							anchor="middle"
+						/>
+						<Txt
+							x={centerX}
+							y={lowY + geom.lowLabelOffset}
+							content={formatDegrees(day.low)}
+							size={geom.lowFontSize}
+							weight={500}
+							anchor="middle"
+						/>
+						<Icon
+							name={day.icon}
+							centerX={centerX}
+							centerY={geom.iconCenterY || (highY + lowY) / 2}
+							scaleFactor={geom.iconScale}
+							strokeWidth={geom.iconStrokeWidth}
+						/>
+						{isFirst ? (
+							<>
+								<Rect
+									x={centerX - labelPillWidth / 2}
+									y={geom.pillY}
+									width={labelPillWidth}
+									height={geom.pillHeight}
+									rx={geom.pillHeight / 2}
+								/>
+								<Txt
+									x={centerX}
+									y={geom.dayLabelY}
+									content={day.label}
+									size={geom.dayFontSize}
+									weight={600}
+									anchor="middle"
+									fill={PAPER}
+								/>
+							</>
+						) : (
+							<Txt
+								x={centerX}
+								y={geom.dayLabelY}
+								content={day.label}
+								size={geom.dayFontSize}
+								weight={600}
+								anchor="middle"
+							/>
+						)}
+					</span>
+				);
+			})}
+		</>
+	);
 }
 
 export interface DayRowsOptions {
@@ -400,98 +417,109 @@ export interface DayRowsOptions {
 }
 
 /** The next six days as rows (day, icon, rain, low–high bar); first baseline y0. */
-export function dayRows({
+export function DayRows({
 	firstBaselineY,
 	rowPitch,
 	view,
-}: DayRowsOptions): ReactElement[] {
-	const { rect, txt } = view;
+}: DayRowsOptions): ReactElement | null {
+	const { Txt } = view;
 	const rows = view.days.slice(ROW_DAYS_START_INDEX, ROW_DAYS_END_INDEX);
-	if (!rows.length) return [];
+	if (!rows.length) return null;
 	const minLow = Math.min(...rows.map((day) => day.low ?? 0));
 	const maxHigh = Math.max(...rows.map((day) => day.high ?? 0));
 	const tempToBarX = (temp: number) =>
 		BAR_CHART_START_X +
 		((temp - minLow) * BAR_CHART_WIDTH) / (maxHigh - minLow || 1);
-	const out: ReactElement[] = [];
-	rows.forEach((day, index) => {
-		const baselineY = firstBaselineY + rowPitch * index;
-		out.push(
-			txt({
-				x: 24,
-				y: baselineY,
-				content: day.label,
-				size: 15,
-				weight: 600,
-			}),
-			icon({
-				name: day.icon,
-				centerX: 77,
-				centerY: baselineY - 6,
-				scaleFactor: 0.86,
-				strokeWidth: 1.75,
-			}),
-		);
-		if (hasRain(day)) {
-			out.push(
-				drop({
-					centerX: 114.5,
-					centerY: baselineY - 5.5,
-					height: 9.6,
-					filled: (day.rain ?? 0) >= RAIN_DROP_FILLED_THRESHOLD,
-				}),
-				txt({
-					x: 124,
-					y: baselineY,
-					content: `${day.rain}%`,
-					size: 14,
-					weight: 500,
-				}),
-			);
-		}
-		out.push(
-			txt({
-				x: 194,
-				y: baselineY,
-				content: formatDegrees(day.low),
-				size: 15,
-				weight: 500,
-				anchor: "end",
-			}),
-		);
-		for (
-			let x = BAR_CHART_START_X;
-			x < BAR_CHART_END_X;
-			x += BAR_CHART_STEP_X
-		) {
-			out.push(rect({ x, y: baselineY - 7, width: 1, height: 2 }));
-		}
-		out.push(
-			rect({
-				x: tempToBarX(day.low ?? 0),
-				y: baselineY - 10,
-				width: tempToBarX(day.high ?? 0) - tempToBarX(day.low ?? 0) || 1,
-				height: 8,
-				extraProps: {
-					rx: 4,
-				},
-			}),
-			txt({
-				x: 371.3,
-				y: baselineY,
-				content: formatDegrees(day.high),
-				size: 15,
-				weight: 600,
-				anchor: "end",
-			}),
-		);
-	});
-	return out;
+
+	const dotCount = Math.floor(
+		(BAR_CHART_END_X - BAR_CHART_START_X) / BAR_CHART_STEP_X,
+	);
+	const dotOffsets: number[] = [];
+	for (let i = 0; i < dotCount; i++) {
+		dotOffsets.push(BAR_CHART_START_X + i * BAR_CHART_STEP_X);
+	}
+
+	return (
+		<>
+			{rows.map((day, index) => {
+				const baselineY = firstBaselineY + rowPitch * index;
+				const barLowX = tempToBarX(day.low ?? 0);
+				const barHighX = tempToBarX(day.high ?? 0);
+				return (
+					<span key={`day-row-${index}`}>
+						<Txt
+							x={24}
+							y={baselineY}
+							content={day.label}
+							size={15}
+							weight={600}
+						/>
+						<Icon
+							name={day.icon}
+							centerX={77}
+							centerY={baselineY - 6}
+							scaleFactor={0.86}
+							strokeWidth={1.75}
+						/>
+						{hasRain(day) && (
+							<>
+								<Drop
+									centerX={114.5}
+									centerY={baselineY - 5.5}
+									height={9.6}
+									filled={(day.rain ?? 0) >= RAIN_DROP_FILLED_THRESHOLD}
+								/>
+								<Txt
+									x={124}
+									y={baselineY}
+									content={`${day.rain}%`}
+									size={14}
+									weight={500}
+								/>
+							</>
+						)}
+						<Txt
+							x={194}
+							y={baselineY}
+							content={formatDegrees(day.low)}
+							size={15}
+							weight={500}
+							anchor="end"
+						/>
+						{dotOffsets.map((x) => (
+							<Rect
+								key={`dot-${x}`}
+								x={x}
+								y={baselineY - 7}
+								width={1}
+								height={2}
+							/>
+						))}
+						<Rect
+							x={barLowX}
+							y={baselineY - 10}
+							width={barHighX - barLowX || 1}
+							height={8}
+							rx={4}
+						/>
+						<Txt
+							x={371.3}
+							y={baselineY}
+							content={formatDegrees(day.high)}
+							size={15}
+							weight={600}
+							anchor="end"
+						/>
+					</span>
+				);
+			})}
+		</>
+	);
 }
 
 /** Today block shared by the list/portrait/column designs (y 0–208). */
-export function todayBlock(view: View): ReactElement[] {
-	const { rect, txt, bigTemp } = view;
+export function TodayBlock({ view }: { view: View }): ReactElement {
+	const { Txt, BigTemp } = view;
 	const dateWidth = estimateTextWidth({ text: view.dateShort, size: 14 });
 	const station = trimToFit({
 		text: view.station,
@@ -499,40 +527,42 @@ export function todayBlock(view: View): ReactElement[] {
 		size: 18,
 		weight: 600,
 	});
-	return [
-		txt({ x: 376, y: 40, content: view.dateShort, size: 14, anchor: "end" }),
-		txt({ x: 24, y: 40, content: station, size: 18, weight: 600 }),
-		bigTemp({
-			x: 24,
-			y: 134,
-			size: 96,
-			maxRight: 318,
-			currentTemp: view.now.temp,
-		}),
-		icon({
-			name: view.now.icon,
-			centerX: 347,
-			centerY: 87.85,
-			scaleFactor: 1.826,
-			strokeWidth: 2.8,
-		}),
-		txt({
-			x: 376,
-			y: 133,
-			content: view.now.text,
-			size: 16,
-			weight: 500,
-			anchor: "end",
-		}),
-		...stats({
-			columnXs: [24, 144, 264],
-			labelY: 166,
-			valueY: 189,
-			fontSize: 20,
-			day: view.days[0],
-			uvColumnXs: [24, 144, 264, 332],
-			view,
-		}),
-		rect({ x: 24, y: 208, width: 352, height: 1 }),
-	];
+	return (
+		<>
+			<Txt x={376} y={40} content={view.dateShort} size={14} anchor="end" />
+			<Txt x={24} y={40} content={station} size={18} weight={600} />
+			<BigTemp
+				x={24}
+				y={134}
+				size={96}
+				maxRight={318}
+				currentTemp={view.now.temp}
+			/>
+			<Icon
+				name={view.now.icon}
+				centerX={347}
+				centerY={87.85}
+				scaleFactor={1.826}
+				strokeWidth={2.8}
+			/>
+			<Txt
+				x={376}
+				y={133}
+				content={view.now.text}
+				size={16}
+				weight={500}
+				anchor="end"
+			/>
+			<Stats
+				columnXs={[24, 144, 264]}
+				labelY={166}
+				valueY={189}
+				fontSize={20}
+				day={view.days[0]}
+				uvColumnXs={[24, 144, 264, 332]}
+				view={view}
+			/>
+			<Rect x={24} y={208} width={352} height={1} />
+		</>
+	);
 }
