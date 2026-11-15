@@ -171,3 +171,22 @@ See `docs/recipes.md` for the full pattern, including data fetching.
 
 ## License
 MIT - see `LICENSE`.
+
+---
+
+## Local Port Assignment (Deterministic Hash)
+
+To prevent port collisions across multiple local projects, this repository uses deterministic port generation based on standard IEEE 802.3 CRC32 hashing:
+
+$$\text{Port} = 20000 + (\text{CRC32}(\text{seed}) \pmod{10000})$$
+
+- Safe port range: `20000`–`29999` (avoids <10k framework collisions and >49152 ephemeral ports).
+- Default seed: repository directory name (`byos_next`).
+- Deterministic port: **`24446`** (app) / **`24625`** (`byos_next:postgres`).
+
+Run the port generator:
+```bash
+pnpm port
+# or with a specific service name:
+node scripts/get-port.js [service-name]
+```
