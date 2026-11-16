@@ -31,7 +31,13 @@ import {
 	type Params,
 	paramsSchema,
 } from "./model";
-import { createPrimitives, INK, PAPER, type View } from "./primitives";
+import {
+	COLOR_BLUE,
+	createPrimitives,
+	INK,
+	PAPER,
+	type View,
+} from "./primitives";
 
 export { dataSchema, paramsSchema };
 
@@ -83,14 +89,14 @@ export default function WeatherCurve({
 		canvasWidth,
 		canvasHeight,
 	);
-	// Only multi-level grayscale (gray-4, gray-16, etc.) or continuous color (color-12bit, color-24bit)
-	// can render #aaa. 1-bit (bw) and discrete e-ink color palettes (color-3bwr, color-7a, etc.)
-	// lack intermediate gray, so #aaa quantizes to pure white. Those use #wc-dots pattern and black grid lines.
-	const hasGray = profile.paletteId
-		? profile.paletteId.startsWith("gray-") ||
-			profile.paletteId === "color-12bit" ||
-			profile.paletteId === "color-24bit"
-		: profile.bitDepth > 1 && !profile.supportsColor;
+	// Only multi-level grayscale (gray-4, gray-16, etc. without color) can render #aaa.
+	// Discrete e-ink color palettes and monochrome screens lack intermediate gray pigments,
+	// so #aaa quantizes to pure white. Those use the #wc-dots stipple pattern.
+	const hasGray = Boolean(
+		profile.paletteId
+			? profile.paletteId.startsWith("gray-")
+			: profile.bitDepth > 1 && !profile.supportsColor,
+	);
 	const hasColor = Boolean(profile.supportsColor);
 	const view: View = {
 		...buildModel(data, params),
@@ -102,7 +108,7 @@ export default function WeatherCurve({
 		}),
 		hasColor,
 	};
-	const needsDots = !hasGray && view.hasRain;
+	const needsDots = (!hasGray || hasColor) && view.hasRain;
 	const { Txt } = view;
 
 	let content: ReactElement;
@@ -189,7 +195,13 @@ export default function WeatherCurve({
 								height={2}
 								patternUnits="userSpaceOnUse"
 							>
-								<rect x={0} y={0} width={1} height={1} fill={INK} />
+								<rect
+									x={0}
+									y={0}
+									width={1}
+									height={1}
+									fill={hasColor ? COLOR_BLUE : INK}
+								/>
 							</pattern>
 						</defs>
 					)}

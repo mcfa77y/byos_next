@@ -347,10 +347,20 @@ export function Chart({
 		<>
 			{gridLines}
 			{view.hasRain && (
-				<path
-					d={`${monotone(withChartEnds(days.map((day) => rainToY(day.rain || 0))))}L${geom.endX} ${geom.baseY}L${geom.startX} ${geom.baseY}Z`}
-					fill={hasGray ? GRAY : "url(#wc-dots)"}
-				/>
+				<>
+					<path
+						d={`${monotone(withChartEnds(days.map((day) => rainToY(day.rain || 0))))}L${geom.endX} ${geom.baseY}L${geom.startX} ${geom.baseY}Z`}
+						fill={hasGray && !view.hasColor ? GRAY : "url(#wc-dots)"}
+					/>
+					<path
+						d={monotone(
+							withChartEnds(days.map((day) => rainToY(day.rain || 0))),
+						)}
+						fill="none"
+						stroke={view.hasColor ? COLOR_BLUE : hasGray ? GRAY : INK}
+						strokeWidth={1}
+					/>
+				</>
 			)}
 			{rainDottedLine}
 			{legendElement}
