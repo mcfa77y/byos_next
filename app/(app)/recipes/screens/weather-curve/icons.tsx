@@ -204,12 +204,11 @@ export function Icon({
 
 	if (spec.sun) {
 		const sun = spec.sun;
-		const sunColor = hasColor ? COLOR_YELLOW : INK;
 		add("circle", {
 			cx: sun[0],
 			cy: sun[1],
 			r: sun[2],
-			stroke: sunColor,
+			stroke: INK,
 			fill: hasColor ? COLOR_YELLOW : "none",
 			vectorEffect: "non-scaling-stroke",
 		});
@@ -222,7 +221,7 @@ export function Icon({
 				y1: sun[1] + sin * sun[3],
 				x2: sun[0] + cos * sun[4],
 				y2: sun[1] + sin * sun[4],
-				stroke: sunColor,
+				stroke: INK,
 				vectorEffect: "non-scaling-stroke",
 			});
 		}
@@ -230,7 +229,7 @@ export function Icon({
 	if (spec.moon) {
 		add("path", {
 			d: moonPath(spec.moon),
-			stroke: hasColor ? COLOR_YELLOW : INK,
+			stroke: INK,
 			fill: hasColor ? COLOR_YELLOW : "none",
 			vectorEffect: "non-scaling-stroke",
 		});
