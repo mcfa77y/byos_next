@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { INK, PAPER } from "./primitives";
+import { COLOR_BLUE, COLOR_YELLOW, INK, PAPER } from "./primitives";
 
 // Geometry fitted to the design at chart size (k = 1), origin = icon anchor.
 // cloud: [bottom, left x, left r, top x, top y, top r, right x, right r]
@@ -175,6 +175,7 @@ export interface IconOptions {
 	centerY: number;
 	scaleFactor: number;
 	strokeWidth: number;
+	hasColor?: boolean;
 }
 
 export function Icon({
@@ -183,6 +184,7 @@ export function Icon({
 	centerY,
 	scaleFactor,
 	strokeWidth,
+	hasColor = false,
 }: IconOptions) {
 	const spec = ICONS[name] || ICONS.cloudy;
 	const children: ReactNode[] = [];
@@ -202,10 +204,13 @@ export function Icon({
 
 	if (spec.sun) {
 		const sun = spec.sun;
+		const sunColor = hasColor ? COLOR_YELLOW : INK;
 		add("circle", {
 			cx: sun[0],
 			cy: sun[1],
 			r: sun[2],
+			stroke: sunColor,
+			fill: hasColor ? COLOR_YELLOW : "none",
 			vectorEffect: "non-scaling-stroke",
 		});
 		for (let i = 0; i < 8; i++) {
@@ -217,15 +222,19 @@ export function Icon({
 				y1: sun[1] + sin * sun[3],
 				x2: sun[0] + cos * sun[4],
 				y2: sun[1] + sin * sun[4],
+				stroke: sunColor,
 				vectorEffect: "non-scaling-stroke",
 			});
 		}
 	}
-	if (spec.moon)
+	if (spec.moon) {
 		add("path", {
 			d: moonPath(spec.moon),
+			stroke: hasColor ? COLOR_YELLOW : INK,
+			fill: hasColor ? COLOR_YELLOW : "none",
 			vectorEffect: "non-scaling-stroke",
 		});
+	}
 	if (spec.cloud) {
 		const pathData = cloudPath(spec.cloud);
 		if (spec.sun || spec.moon) {
@@ -245,6 +254,7 @@ export function Icon({
 	}
 	if (spec.drops) {
 		const drops = spec.drops;
+		const dropColor = hasColor ? COLOR_BLUE : INK;
 		for (let j = -1; j <= 1; j++) {
 			const x = drops[0] + j * drops[1];
 			add("line", {
@@ -252,6 +262,7 @@ export function Icon({
 				y1: drops[2],
 				x2: x - drops[4] / 2,
 				y2: drops[3],
+				stroke: dropColor,
 				vectorEffect: "non-scaling-stroke",
 			});
 		}
@@ -262,11 +273,18 @@ export function Icon({
 			y1: lineCoords[1],
 			x2: lineCoords[2],
 			y2: lineCoords[3],
+			stroke: hasColor ? COLOR_BLUE : INK,
 			vectorEffect: "non-scaling-stroke",
 		});
 	}
 	for (const pathData of spec.paths || []) {
-		add("path", { d: pathData, vectorEffect: "non-scaling-stroke" });
+		const isThunder = name === "thunderstorm";
+		add("path", {
+			d: pathData,
+			stroke: hasColor && isThunder ? COLOR_YELLOW : INK,
+			fill: hasColor && isThunder ? COLOR_YELLOW : "none",
+			vectorEffect: "non-scaling-stroke",
+		});
 	}
 	for (const point of spec.dots || []) {
 		children.push(
@@ -275,7 +293,7 @@ export function Icon({
 				cx={point[0]}
 				cy={point[1]}
 				r={1.3}
-				fill={INK}
+				fill={hasColor ? COLOR_BLUE : INK}
 				stroke="none"
 			/>,
 		);
@@ -285,6 +303,7 @@ export function Icon({
 			cx: ring[0],
 			cy: ring[1],
 			r: 1.4,
+			stroke: hasColor ? COLOR_BLUE : INK,
 			vectorEffect: "non-scaling-stroke",
 		});
 	}
@@ -313,12 +332,19 @@ export interface DropOptions {
 	centerY: number;
 	height: number;
 	filled: boolean;
+	color?: string;
 }
 
 /** Rain drop: filled from 50% chance of rain, outlined below. */
-export function Drop({ centerX, centerY, height, filled }: DropOptions) {
-	const width = height * DROP_WIDTH_TO_HEIGHT_RATIO;
+export function Drop({
+	centerX,
+	centerY,
+	height,
+	filled,
+	color = INK,
+}: DropOptions) {
 	const topY = centerY - height / 2;
+	const width = height * DROP_WIDTH_TO_HEIGHT_RATIO;
 	const bottomRadius = width / 2;
 	const bottomCenterY = centerY + height / 2 - bottomRadius;
 	const controlPointOffsetY =
@@ -331,12 +357,12 @@ export function Drop({ centerX, centerY, height, filled }: DropOptions) {
 		`${centerX + bottomRadius} ${bottomCenterY}A${bottomRadius} ${bottomRadius} 0 0 1 ${centerX - bottomRadius} ${bottomCenterY}` +
 		`C${centerX - bottomRadius} ${controlPointOffsetY} ${centerX - controlPointOffsetX} ${controlPointTopY} ${centerX} ${topY}Z`;
 	return filled ? (
-		<path d={pathData} fill={INK} />
+		<path d={pathData} fill={color} />
 	) : (
 		<path
 			d={pathData}
 			fill="none"
-			stroke={INK}
+			stroke={color}
 			strokeWidth={height * DROP_STROKE_WIDTH_FACTOR}
 		/>
 	);

@@ -2,9 +2,14 @@ import type { ReactElement } from "react";
 import { Drop, Icon } from "./icons";
 import { hasRain, type ModelDay } from "./model";
 import {
+	COLOR_BLUE,
+	COLOR_ORANGE,
+	COLOR_RED,
+	COLOR_YELLOW,
 	estimateTextWidth,
 	formatDegrees,
 	GRAY,
+	getUvColor,
 	INK,
 	PAPER,
 	Rect,
@@ -136,25 +141,64 @@ export function Stats({
 	const positions = showUv ? uvColumnXs : columnXs;
 	return (
 		<>
-			{items.map((statItem, index) => (
-				<span key={statItem[0]}>
-					<Txt
-						x={positions[index]}
-						y={labelY}
-						content={statItem[0]}
-						size={11}
-						weight={600}
-						letterSpacing={1}
-					/>
-					<Txt
-						x={positions[index]}
-						y={valueY}
-						content={statItem[1]}
-						size={fontSize}
-						weight={600}
-					/>
-				</span>
-			))}
+			{items.map((statItem, index) => {
+				const isHigh = index === 0;
+				const isLow = index === 1;
+				const isRain = statItem[0] === view.i18n.rain;
+				const isUv = statItem[0] === "UV";
+
+				let valueColor = INK;
+				let badgeElement: ReactElement | null = null;
+				let textColor = INK;
+
+				if (view.hasColor) {
+					if (isHigh) {
+						valueColor = COLOR_RED;
+					} else if (isLow || isRain) {
+						valueColor = COLOR_BLUE;
+					} else if (isUv && day.uv != null) {
+						const uvColor = getUvColor(day.uv);
+						const uvText = statItem[1];
+						const badgeWidth =
+							estimateTextWidth({ text: uvText, size: fontSize, weight: 600 }) +
+							14;
+						const badgeHeight = fontSize * 1.15;
+						badgeElement = (
+							<Rect
+								x={positions[index] - 7}
+								y={valueY - fontSize * 0.85}
+								width={badgeWidth}
+								height={badgeHeight}
+								rx={4}
+								fill={uvColor}
+							/>
+						);
+						textColor = uvColor === COLOR_YELLOW ? INK : PAPER;
+					}
+				}
+
+				return (
+					<span key={statItem[0]}>
+						<Txt
+							x={positions[index]}
+							y={labelY}
+							content={statItem[0]}
+							size={11}
+							weight={600}
+							letterSpacing={1}
+						/>
+						{badgeElement}
+						<Txt
+							x={positions[index]}
+							y={valueY}
+							content={statItem[1]}
+							size={fontSize}
+							weight={600}
+							fill={isUv && badgeElement ? textColor : valueColor}
+						/>
+					</span>
+				);
+			})}
 		</>
 	);
 }
@@ -267,6 +311,7 @@ export function Chart({
 					y={geom.rainTopY}
 					width={1}
 					height={1}
+					fill={view.hasColor ? COLOR_BLUE : INK}
 				/>,
 			);
 		}
@@ -292,6 +337,7 @@ export function Chart({
 					size={11}
 					weight={500}
 					anchor="end"
+					fill={view.hasColor ? COLOR_BLUE : INK}
 				/>
 			</>
 		);
@@ -317,13 +363,13 @@ export function Chart({
 			<path
 				d={monotone(withChartEnds(highs.map(tempToY)))}
 				fill="none"
-				stroke={INK}
+				stroke={view.hasColor ? COLOR_RED : INK}
 				strokeWidth={geom.highStrokeWidth}
 			/>
 			<path
 				d={monotone(withChartEnds(lows.map(tempToY)))}
 				fill="none"
-				stroke={INK}
+				stroke={view.hasColor ? COLOR_BLUE : INK}
 				strokeWidth={geom.lowStrokeWidth}
 			/>
 			{days.map((day, index) => {
@@ -347,10 +393,15 @@ export function Chart({
 							cy={highY}
 							r={geom.highRadius}
 							fill={PAPER}
-							stroke={INK}
+							stroke={view.hasColor ? COLOR_RED : INK}
 							strokeWidth={geom.highRadiusStrokeWidth}
 						/>
-						<circle cx={centerX} cy={lowY} r={geom.lowRadius} fill={INK} />
+						<circle
+							cx={centerX}
+							cy={lowY}
+							r={geom.lowRadius}
+							fill={view.hasColor ? COLOR_BLUE : INK}
+						/>
 						<Txt
 							x={centerX}
 							y={highY + geom.highLabelOffset}
@@ -358,6 +409,7 @@ export function Chart({
 							size={geom.highFontSize}
 							weight={600}
 							anchor="middle"
+							fill={view.hasColor ? COLOR_RED : INK}
 						/>
 						<Txt
 							x={centerX}
@@ -366,6 +418,7 @@ export function Chart({
 							size={geom.lowFontSize}
 							weight={500}
 							anchor="middle"
+							fill={view.hasColor ? COLOR_BLUE : INK}
 						/>
 						<Icon
 							name={day.icon}
@@ -373,6 +426,7 @@ export function Chart({
 							centerY={geom.iconCenterY || (highY + lowY) / 2}
 							scaleFactor={geom.iconScale}
 							strokeWidth={geom.iconStrokeWidth}
+							hasColor={view.hasColor}
 						/>
 						{isFirst ? (
 							<>
@@ -460,6 +514,7 @@ export function DayRows({
 							centerY={baselineY - 6}
 							scaleFactor={0.86}
 							strokeWidth={1.75}
+							hasColor={view.hasColor}
 						/>
 						{hasRain(day) && (
 							<>
@@ -468,6 +523,7 @@ export function DayRows({
 									centerY={baselineY - 5.5}
 									height={9.6}
 									filled={(day.rain ?? 0) >= RAIN_DROP_FILLED_THRESHOLD}
+									color={view.hasColor ? COLOR_BLUE : INK}
 								/>
 								<Txt
 									x={124}
@@ -475,6 +531,7 @@ export function DayRows({
 									content={`${day.rain}%`}
 									size={14}
 									weight={500}
+									fill={view.hasColor ? COLOR_BLUE : INK}
 								/>
 							</>
 						)}
@@ -485,6 +542,7 @@ export function DayRows({
 							size={15}
 							weight={500}
 							anchor="end"
+							fill={view.hasColor ? COLOR_BLUE : INK}
 						/>
 						{dotOffsets.map((x) => (
 							<Rect
@@ -501,6 +559,7 @@ export function DayRows({
 							width={barHighX - barLowX || 1}
 							height={8}
 							rx={4}
+							fill={view.hasColor ? COLOR_ORANGE : INK}
 						/>
 						<Txt
 							x={371.3}
@@ -509,6 +568,7 @@ export function DayRows({
 							size={15}
 							weight={600}
 							anchor="end"
+							fill={view.hasColor ? COLOR_RED : INK}
 						/>
 					</span>
 				);
@@ -544,6 +604,7 @@ export function TodayBlock({ view }: { view: View }): ReactElement {
 				centerY={87.85}
 				scaleFactor={1.826}
 				strokeWidth={2.8}
+				hasColor={view.hasColor}
 			/>
 			<Txt
 				x={376}

@@ -83,8 +83,15 @@ export default function WeatherCurve({
 		canvasWidth,
 		canvasHeight,
 	);
-	// Bit-depth 1 screens drop #aaa entirely: rain area becomes a dot pattern.
-	const hasGray = profile.bitDepth > 1 || profile.colors > 2;
+	// Only multi-level grayscale (gray-4, gray-16, etc.) or continuous color (color-12bit, color-24bit)
+	// can render #aaa. 1-bit (bw) and discrete e-ink color palettes (color-3bwr, color-7a, etc.)
+	// lack intermediate gray, so #aaa quantizes to pure white. Those use #wc-dots pattern and black grid lines.
+	const hasGray = profile.paletteId
+		? profile.paletteId.startsWith("gray-") ||
+			profile.paletteId === "color-12bit" ||
+			profile.paletteId === "color-24bit"
+		: profile.bitDepth > 1 && !profile.supportsColor;
+	const hasColor = Boolean(profile.supportsColor);
 	const view: View = {
 		...buildModel(data, params),
 		...createPrimitives({
@@ -93,6 +100,7 @@ export default function WeatherCurve({
 			viewWidth,
 			viewHeight,
 		}),
+		hasColor,
 	};
 	const needsDots = !hasGray && view.hasRain;
 	const { Txt } = view;

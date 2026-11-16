@@ -158,4 +158,173 @@ describe("WeatherCurve component", () => {
 			}
 		});
 	}
+
+	it("renders dot pattern for rain on 1-bit or bw palette screens", () => {
+		const element = React.createElement(WeatherCurve, {
+			width: 800,
+			height: 480,
+			data: sampleData,
+			params: sampleParams,
+			screen: {
+				physicalWidth: 800,
+				physicalHeight: 480,
+				logicalWidth: 800,
+				logicalHeight: 480,
+				pixelRatio: 1,
+				ditherPixelRatio: 1,
+				uiScale: 1,
+				gapScale: 1,
+				sizeTier: "md",
+				density: "1x",
+				orientation: "landscape",
+				aspectRatio: 800 / 480,
+				colors: 4,
+				bitDepth: 2,
+				supportsColor: false,
+				isCompact: false,
+				isHalfScreen: false,
+				isLarge: false,
+				paletteId: "bw",
+			},
+		});
+		const rendered = (
+			element.type as (props: unknown) => React.ReactElement<{
+				children: React.ReactElement<{ children: React.ReactNode }>;
+			}>
+		)(element.props);
+		const rootDiv = rendered.props.children;
+		const children = React.Children.toArray(rootDiv.props.children);
+		const svg = children[0] as React.ReactElement<{
+			children: React.ReactNode;
+		}>;
+		const svgInner = React.Children.toArray(svg.props.children);
+		const defs = svgInner.find(
+			(child) => React.isValidElement(child) && child.type === "defs",
+		);
+		expect(defs).toBeDefined();
+	});
+
+	it("renders dot pattern for rain on discrete 7-color e-ink palette screens", () => {
+		const element = React.createElement(WeatherCurve, {
+			width: 800,
+			height: 480,
+			data: sampleData,
+			params: sampleParams,
+			screen: {
+				physicalWidth: 800,
+				physicalHeight: 480,
+				logicalWidth: 800,
+				logicalHeight: 480,
+				pixelRatio: 1,
+				ditherPixelRatio: 1,
+				uiScale: 1,
+				gapScale: 1,
+				sizeTier: "md",
+				density: "1x",
+				orientation: "landscape",
+				aspectRatio: 800 / 480,
+				colors: 7,
+				bitDepth: 3,
+				supportsColor: true,
+				isCompact: false,
+				isHalfScreen: false,
+				isLarge: false,
+				paletteId: "color-7a",
+			},
+		});
+		const rendered = (
+			element.type as (props: unknown) => React.ReactElement<{
+				children: React.ReactElement<{ children: React.ReactNode }>;
+			}>
+		)(element.props);
+		const rootDiv = rendered.props.children;
+		const children = React.Children.toArray(rootDiv.props.children);
+		const svg = children[0] as React.ReactElement<{
+			children: React.ReactNode;
+		}>;
+		const svgInner = React.Children.toArray(svg.props.children);
+		const defs = svgInner.find(
+			(child) => React.isValidElement(child) && child.type === "defs",
+		);
+		expect(defs).toBeDefined();
+	});
+
+	it("renders rain percentages and stats when rain data is present", () => {
+		const element = React.createElement(WeatherCurve, {
+			width: 800,
+			height: 480,
+			data: sampleData,
+			params: sampleParams,
+		});
+		const rendered = (
+			element.type as (props: unknown) => React.ReactElement<{
+				children: React.ReactElement<{ children: React.ReactNode }>;
+			}>
+		)(element.props);
+		const rootDiv = rendered.props.children;
+		const children = React.Children.toArray(rootDiv.props.children);
+		const textDivs = children.slice(1) as React.ReactElement<{
+			children: React.ReactNode;
+		}>[];
+		const textContents = textDivs.map((d) => String(d.props.children));
+		expect(textContents).toContain("RAIN");
+		expect(textContents).toContain("20%");
+	});
+
+	it("renders color-coded curves and drops when screen supports color", () => {
+		const element = React.createElement(WeatherCurve, {
+			width: 800,
+			height: 480,
+			data: sampleData,
+			params: sampleParams,
+			screen: {
+				physicalWidth: 800,
+				physicalHeight: 480,
+				logicalWidth: 800,
+				logicalHeight: 480,
+				pixelRatio: 1,
+				ditherPixelRatio: 1,
+				uiScale: 1,
+				gapScale: 1,
+				sizeTier: "md",
+				density: "1x",
+				orientation: "landscape",
+				aspectRatio: 800 / 480,
+				colors: 7,
+				bitDepth: 3,
+				supportsColor: true,
+				isCompact: false,
+				isHalfScreen: false,
+				isLarge: false,
+				paletteId: "color-7a",
+			},
+		});
+		const rendered = (
+			element.type as (props: unknown) => React.ReactElement<{
+				children: React.ReactElement<{ children: React.ReactNode }>;
+			}>
+		)(element.props);
+		const rootDiv = rendered.props.children;
+		const children = React.Children.toArray(rootDiv.props.children);
+		const svg = children[0] as React.ReactElement<{
+			children: React.ReactNode;
+		}>;
+		const svgInner = React.Children.toArray(svg.props.children);
+		// High temp path with red stroke (#FF0000)
+		const redPath = svgInner.find(
+			(child) =>
+				React.isValidElement<{ stroke?: string }>(child) &&
+				child.type === "path" &&
+				child.props.stroke === "#FF0000",
+		);
+		expect(redPath).toBeDefined();
+		// Low temp path with blue stroke (#0000FF)
+		const bluePath = svgInner.find(
+			(child) =>
+				React.isValidElement<{ stroke?: string }>(child) &&
+				child.type === "path" &&
+				child.props.stroke === "#0000FF",
+		);
+		expect(bluePath).toBeDefined();
+	});
 });

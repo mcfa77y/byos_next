@@ -11,6 +11,22 @@ export const GRAY = "#aaa";
 export const PAPER = "#fff";
 export const INK = "#000";
 
+// Inky Frame 7-color e-ink palette
+export const COLOR_RED = "#FF0000";
+export const COLOR_ORANGE = "#FFA500";
+export const COLOR_YELLOW = "#FFFF00";
+export const COLOR_GREEN = "#00FF00";
+export const COLOR_BLUE = "#0000FF";
+
+/** WHO standard UV index severity colors */
+export function getUvColor(uv: number | null): string {
+	if (uv == null) return INK;
+	if (uv <= 2) return COLOR_GREEN;
+	if (uv <= 5) return COLOR_YELLOW;
+	if (uv <= 7) return COLOR_ORANGE;
+	return COLOR_RED;
+}
+
 const CHAR_WIDTH_EXTRA_WIDE = 0.82;
 const CHAR_WIDTH_WIDE = 0.62;
 const CHAR_WIDTH_MEDIUM = 0.55;
@@ -237,4 +253,4 @@ export interface Primitives {
 	Txt: (options: TextRenderOptions) => ReactElement;
 	BigTemp: (options: BigTempOptions) => ReactElement;
 }
-export type View = Model & Primitives;
+export type View = Model & Primitives & { hasColor?: boolean };

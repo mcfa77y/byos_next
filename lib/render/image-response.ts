@@ -13,6 +13,7 @@ export function imageResponse(
 		headers: {
 			"Content-Type": image.mime_type,
 			"Content-Length": image.buffer.length.toString(),
+			"Cache-Control": "private, no-cache, no-store, must-revalidate",
 			...(image.size_limit_exceeded
 				? { "X-TRMNL-Image-Size-Limit-Exceeded": "true" }
 				: {}),

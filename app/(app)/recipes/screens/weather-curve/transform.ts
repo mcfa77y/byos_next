@@ -20,6 +20,7 @@ export interface OpenMeteoInput {
 	daily?: {
 		time?: string[];
 		uv_index_max?: (number | null)[];
+		precipitation_probability_max?: (number | null)[];
 	};
 }
 
@@ -231,9 +232,15 @@ export interface BuildDayOptions {
 	dateStr: string;
 	dayRows: HourlyRow[];
 	uvIndex?: number | null;
+	rainProbability?: number | null;
 }
 
-function buildDay({ dateStr, dayRows, uvIndex }: BuildDayOptions): WeatherDay {
+function buildDay({
+	dateStr,
+	dayRows,
+	uvIndex,
+	rainProbability,
+}: BuildDayOptions): WeatherDay {
 	const temperatureValues = dayRows
 		.map((row) => row.temperature)
 		.filter((temp): temp is number => temp != null);
@@ -257,7 +264,9 @@ function buildDay({ dateStr, dayRows, uvIndex }: BuildDayOptions): WeatherDay {
 			? rnd1(Math.max(...temperatureValues))
 			: null,
 		low: temperatureValues.length ? rnd1(Math.min(...temperatureValues)) : null,
-		rain: probabilityValues.length ? Math.max(...probabilityValues) : null,
+		rain: probabilityValues.length
+			? Math.max(...probabilityValues)
+			: (rainProbability ?? null),
 		icon: dayIcon(daytimeHours.length ? daytimeHours : dayRows),
 		uv: uvIndex ?? null,
 	};
@@ -275,6 +284,18 @@ function parseUvMap(daily?: OpenMeteoInput["daily"]): Record<string, number> {
 	}
 	return uvMap;
 }
+function parseRainMap(daily?: OpenMeteoInput["daily"]): Record<string, number> {
+	const rainMap: Record<string, number> = {};
+	if (!daily?.time || !daily?.precipitation_probability_max) return rainMap;
+
+	for (let index = 0; index < daily.time.length; index++) {
+		const rainValue = daily.precipitation_probability_max[index];
+		if (typeof rainValue === "number") {
+			rainMap[daily.time[index].slice(0, 10)] = Math.round(rainValue);
+		}
+	}
+	return rainMap;
+}
 
 function groupByDate(rows: HourlyRow[]): Map<string, HourlyRow[]> {
 	const byDate = new Map<string, HourlyRow[]>();
@@ -291,6 +312,7 @@ export function transformOpenMeteo(input: OpenMeteoInput): WeatherCurveData {
 	const zone = formatZoneOffset(Number(input?.utc_offset_seconds || 0));
 	const now = parseCurrent({ input, zone, firstRow: rows[0] });
 	const uvMap = parseUvMap(input?.daily);
+	const rainMap = parseRainMap(input?.daily);
 	const byDate = groupByDate(rows);
 	const fullDates = Array.from(byDate.keys())
 		.filter(
@@ -310,6 +332,7 @@ export function transformOpenMeteo(input: OpenMeteoInput): WeatherCurveData {
 				dateStr,
 				dayRows: byDate.get(dateStr) || [],
 				uvIndex: uvMap[dateStr],
+				rainProbability: rainMap[dateStr],
 			}),
 		);
 		if (days.length === FORECAST_DAYS_TARGET) break;

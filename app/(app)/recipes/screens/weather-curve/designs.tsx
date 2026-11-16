@@ -3,6 +3,8 @@ import { Chart, DayRows, Footer, monotone, Stats, TodayBlock } from "./chart";
 import { Drop, Icon } from "./icons";
 import { hasRain } from "./model";
 import {
+	COLOR_BLUE,
+	COLOR_RED,
 	estimateTextWidth,
 	formatDegrees,
 	INK,
@@ -69,6 +71,7 @@ export function DesignFull({
 					centerY={389.9 + extraHeight}
 					scaleFactor={1.32}
 					strokeWidth={2.5}
+					hasColor={view.hasColor}
 				/>
 				<Txt
 					x={76}
@@ -86,12 +89,14 @@ export function DesignFull({
 							size={18}
 							weight={500}
 							anchor="end"
+							fill={view.hasColor ? COLOR_BLUE : INK}
 						/>
 						<Drop
 							centerX={256 - rainPercentWidth - 6.5 - 4.15}
 							centerY={389.35 + extraHeight}
 							height={11.3}
 							filled={(tomorrow.rain ?? 0) >= 50}
+							color={view.hasColor ? COLOR_BLUE : INK}
 						/>
 					</>
 				)}
@@ -127,6 +132,7 @@ export function DesignFull({
 				centerY={122.9}
 				scaleFactor={2.068}
 				strokeWidth={3.2}
+				hasColor={view.hasColor}
 			/>
 			<Txt x={24} y={213} content={view.now.text} size={18} weight={500} />
 			<Stats
@@ -275,13 +281,13 @@ export function DesignColumn({
 			<path
 				d={monotone(withCurveEnds(highs.map(tempToX)), true)}
 				fill="none"
-				stroke={INK}
+				stroke={view.hasColor ? COLOR_RED : INK}
 				strokeWidth={2.5}
 			/>
 			<path
 				d={monotone(withCurveEnds(lows.map(tempToX)), true)}
 				fill="none"
-				stroke={INK}
+				stroke={view.hasColor ? COLOR_BLUE : INK}
 				strokeWidth={1.5}
 			/>
 			{days.map((day, index) => {
@@ -331,6 +337,7 @@ export function DesignColumn({
 							centerY={centerY - 1}
 							scaleFactor={0.9}
 							strokeWidth={1.8}
+							hasColor={view.hasColor}
 						/>
 						{hasRain(day) && (
 							<>
@@ -339,6 +346,7 @@ export function DesignColumn({
 									centerY={centerY - 0.5}
 									height={9.6}
 									filled={(day.rain ?? 0) >= 50}
+									color={view.hasColor ? COLOR_BLUE : INK}
 								/>
 								<Txt
 									x={126}
@@ -346,6 +354,7 @@ export function DesignColumn({
 									content={`${day.rain}%`}
 									size={14}
 									weight={500}
+									fill={view.hasColor ? COLOR_BLUE : INK}
 								/>
 							</>
 						)}
@@ -354,10 +363,15 @@ export function DesignColumn({
 							cy={centerY}
 							r={4.5}
 							fill={PAPER}
-							stroke={INK}
+							stroke={view.hasColor ? COLOR_RED : INK}
 							strokeWidth={2}
 						/>
-						<circle cx={lowX} cy={centerY} r={3.3} fill={INK} />
+						<circle
+							cx={lowX}
+							cy={centerY}
+							r={3.3}
+							fill={view.hasColor ? COLOR_BLUE : INK}
+						/>
 						<Txt
 							x={lowX - 9}
 							y={baselineY}
@@ -365,6 +379,7 @@ export function DesignColumn({
 							size={15}
 							weight={500}
 							anchor="end"
+							fill={view.hasColor ? COLOR_BLUE : INK}
 						/>
 						<Txt
 							x={highX + 9}
@@ -372,6 +387,7 @@ export function DesignColumn({
 							content={formatDegrees(day.high)}
 							size={16}
 							weight={600}
+							fill={view.hasColor ? COLOR_RED : INK}
 						/>
 					</span>
 				);
@@ -451,6 +467,7 @@ export function DesignWide({
 				centerY={112 + extraHeight / 2}
 				scaleFactor={1.5}
 				strokeWidth={2.5}
+				hasColor={view.hasColor}
 			/>
 			<Txt
 				x={24}
@@ -535,6 +552,7 @@ export function DesignQuadrant({
 				centerY={80 + extraHeight / 3}
 				scaleFactor={1.5}
 				strokeWidth={2.5}
+				hasColor={view.hasColor}
 			/>
 			<Txt
 				x={376}

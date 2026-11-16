@@ -31,7 +31,7 @@ const DEFAULT_TIMEZONE = "auto";
 const CURRENT_WEATHER_FIELDS = "temperature_2m,weather_code,is_day";
 const HOURLY_WEATHER_FIELDS =
 	"temperature_2m,precipitation_probability,precipitation,weather_code,is_day";
-const DAILY_WEATHER_FIELDS = "uv_index_max";
+const DAILY_WEATHER_FIELDS = "uv_index_max,precipitation_probability_max";
 const DEFAULT_FALLBACK_ICON = "cloudy";
 const DEFAULT_WEATHER_SOURCE = "open-meteo";
 
@@ -71,7 +71,14 @@ export async function fetchCurveData(
 	let longitude = params?.longitude;
 	let station = locationName || "";
 
-	if ((!latitude || !longitude) && locationName) {
+	const hasValidCoords =
+		typeof latitude === "number" &&
+		typeof longitude === "number" &&
+		Number.isFinite(latitude) &&
+		Number.isFinite(longitude) &&
+		!(latitude === 0 && longitude === 0);
+
+	if (!hasValidCoords && locationName) {
 		const geocoded = await geocodeLocation(locationName);
 		if (geocoded) {
 			latitude = geocoded.latitude;
@@ -88,7 +95,14 @@ export async function fetchCurveData(
 		updated: "",
 	};
 
-	if (!latitude || !longitude) return empty;
+	if (
+		typeof latitude !== "number" ||
+		typeof longitude !== "number" ||
+		!Number.isFinite(latitude) ||
+		!Number.isFinite(longitude)
+	) {
+		return empty;
+	}
 
 	try {
 		const query = new URLSearchParams({
