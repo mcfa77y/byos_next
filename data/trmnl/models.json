@@ -3370,6 +3370,120 @@
           ]
         ]
       }
+    },
+    {
+      "name": "joan_6",
+      "label": "Joan 6",
+      "description": "Joan 6",
+      "width": 1024,
+      "height": 758,
+      "colors": 16,
+      "bit_depth": 4,
+      "scale_factor": 0.9846,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "joan",
+      "palette_ids": [
+        "gray-16",
+        "gray-4",
+        "bw"
+      ],
+      "default_palette_id": "gray-16",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--joan_6",
+          "size": "screen--lg",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "1040px"
+          ],
+          [
+            "--screen-h",
+            "770px"
+          ],
+          [
+            "--pixel-ratio",
+            "0.9846"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "joan_6_pro",
+      "label": "Joan 6 Pro",
+      "description": "Joan 6 Pro",
+      "width": 800,
+      "height": 600,
+      "colors": 16,
+      "bit_depth": 4,
+      "scale_factor": 0.7692,
+      "rotation": 0,
+      "mime_type": "image/png",
+      "offset_x": 0,
+      "offset_y": 0,
+      "kind": "joan",
+      "palette_ids": [
+        "gray-16",
+        "gray-4",
+        "bw"
+      ],
+      "default_palette_id": "gray-16",
+      "preview_white_point": "true_white",
+      "image_size_limit": null,
+      "image_upload_supported": true,
+      "css": {
+        "classes": {
+          "device": "screen--joan_6_pro",
+          "size": "screen--lg",
+          "density": "screen--density-1x"
+        },
+        "variables": [
+          [
+            "--screen-w",
+            "1040px"
+          ],
+          [
+            "--screen-h",
+            "780px"
+          ],
+          [
+            "--pixel-ratio",
+            "0.7692"
+          ],
+          [
+            "--dither-pixel-ratio",
+            "1.0"
+          ],
+          [
+            "--device-ui-scale",
+            "1.0"
+          ],
+          [
+            "--gap-scale",
+            "1.0"
+          ]
+        ]
+      }
     }
   ]
 }
