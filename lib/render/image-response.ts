@@ -14,6 +14,8 @@ export function imageResponse(
 			"Content-Type": image.mime_type,
 			"Content-Length": image.buffer.length.toString(),
 			"Cache-Control": "private, no-cache, no-store, must-revalidate",
+			"CDN-Cache-Control": "no-store",
+			"Cloudflare-CDN-Cache-Control": "no-store",
 			...(image.size_limit_exceeded
 				? { "X-TRMNL-Image-Size-Limit-Exceeded": "true" }
 				: {}),

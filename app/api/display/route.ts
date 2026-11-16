@@ -194,6 +194,11 @@ export async function GET(request: Request) {
 				);
 				break;
 		}
+		if (imageUrl) {
+			const parsedUrl = new URL(imageUrl);
+			parsedUrl.searchParams.set("t", uniqueId);
+			imageUrl = parsedUrl.toString();
+		}
 
 		precacheImageInBackground(imageUrl, device.friendly_id);
 		updateDeviceStatus(device, headers, dynamicRefreshRate);
